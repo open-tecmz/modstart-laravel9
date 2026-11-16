@@ -1,0 +1,71 @@
+<link rel="stylesheet/less" type="text/css" href="./bricks/component/bar/bar.less"/>
+
+
+<div class="ub-container">
+
+    <div class="ub-bar-page">
+        <div class="items">
+            <a class="item" href="javascript:;">
+                <i class="icon iconfont icon-qq"></i>
+                <span class="text">QQ</span>
+                <div class="popup">
+                    <div class="content">
+                        立即联系我们
+                        <br>
+                        88888888888
+                    </div>
+                </div>
+            </a>
+            <a class="item" href="javascript:;">
+                <i class="icon iconfont icon-wechat"></i>
+                <span class="text">微信</span>
+                <div class="popup">
+                    <div class="content">
+                        <p>微信扫一扫联系</p>
+                        <img data-src="placeholder/400x400" />
+                    </div>
+                </div>
+            </a>
+            <a class="item item-icon item-back" href="javascript:;" onclick="$('body,html').animate({scrollTop:0},500);">
+                <i class="icon iconfont icon-angle-up"></i>
+            </a>
+        </div>
+        <a href="javascript:;" class="item-top">
+            <div class="cover">
+                <div class="avatar" data-background-url="placeholder/400x400"></div>
+            </div>
+            <div class="popup">
+                <div class="content">
+                    <img data-src="placeholder/400x400" />
+                </div>
+            </div>
+        </a>
+        <div class="bar-page-close" onclick="$(this).parent().addClass('close');">
+            <i class="iconfont icon-close"></i>
+        </div>
+        <div class="bar-page-show" onclick="$(this).parent().removeClass('close');">
+            <i class="iconfont icon-customer"></i>
+            客服
+        </div>
+    </div>
+
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+    <p>{EN,1000,2000}</p>
+
+</div>
+
+<script>
+    // Mimic the production scroll watcher that unlocks the back-to-top item.
+    $(function () {
+        $(window).on('scroll', function () {
+            $('html').toggleClass('body-scroll-far', $(window).scrollTop() > 400);
+        });
+    });
+</script>

@@ -1,0 +1,1577 @@
+<?php
+
+namespace ModStart\Core\Dao;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use ModStart\Core\Exception\BizException;
+use ModStart\Core\Input\InputPackage;
+use ModStart\Core\Util\ArrayUtil;
+use ModStart\Core\Util\PageHtmlUtil;
+use ModStart\Core\Util\SerializeUtil;
+use ModStart\Repository\EmptyItem;
+
+/**
+ * @Util 数据库
+ */
+class ModelUtil
+{
+    /**
+     * 判断是否为模型，约定：数据库使用下划线，模型使用驼峰
+     * @param $tableOrModel string|Model
+     */
+    public static function isModel($tableOrModel)
+    {
+        if (!is_string($tableOrModel)) {
+            return true;
+        }
+        return strtolower($tableOrModel) != $tableOrModel;
+    }
+
+    /**
+     * 自动构建出模型
+     * @param $tableOrModel string
+     * @return Model|Builder|mixed|DynamicModel
+     */
+    public static function autoModel($tableOrModel)
+    {
+        if (self::isModel($tableOrModel)) {
+            if (is_string($tableOrModel)) {
+                return new $tableOrModel();
+            }
+            return $tableOrModel;
+        }
+        return self::model($tableOrModel);
+    }
+
+    /**
+     * @Util 构建模型
+     * @param $model string 数据表
+     * @return Model|Builder 数据库模型
+     * @example
+     * // 查询
+     * ModelUtil::model('user')->where(['id'=>1])->get()->toArray();
+     * ModelUtil::model('user')->where('id','>',5)->get()->toArray();
+     * // 查询-like
+     * ModelUtil::model('user')->where('username','like','%keywords%')->get()->toArray();
+     * // 查询-limit
+     * ModelUtil::model('user')->limit(5)->get()->toArray();
+     * // 查询-原生SQL
+     * ModelUtil::model('user')->whereRaw(DB::raw('id > 0 OR id is null'))->get()->toArray();
+     *
+     * // 删除
+     * ModelUtil::model('user')->where(['id'=>1])->delete();
+     *
+     * // 更新
+     * ModelUtil::model('user')->where(['id'=>1])->update(['username'=>'aaa']);
+     */
+    public static function model($model)
+    {
+        if (is_object($model)) {
+            return $model;
+        }
+        // Module\Xxx\Model\Xxx
+        if (preg_match('/\\\\Model\\\\(.*)$/', $model)) {
+            if (class_exists($model)) {
+                return new $model();
+            }
+        }
+        $m = new DynamicModel();
+        $m->setTable($model);
+        return $m;
+    }
+
+
+    /**
+     * 插入数据
+     * @param $model string 数据表
+     * @param $record array 数据数组
+     * @return array 插入的数据记录
+     * @example
+     * ModelUtil::insert('user',['username'=>'aaa','nickname'=>'bbb']);
+     *
+     * @Util
+     */
+    public static function insert($model, $record)
+    {
+        $m = self::model($model);
+        foreach ($record as $k => $v) {
+            $m->$k = $v;
+        }
+        $m->save();
+        return $m->toArray();
+    }
+
+    public static function insertIfNotExists($model, $where, $record = [])
+    {
+        if (ModelUtil::exists($model, $where)) {
+            return false;
+        }
+        ModelUtil::insert($model, array_merge($where, $record));
+        return true;
+    }
+
+    public static function insertIgnoreUnique($model, $record)
+    {
+        try {
+            self::insert($model, $record);
+        } catch (\Exception $e) {
+            $msg = $e->getMessage();
+            if (Str::contains($msg, 'Duplicate entry')) {
+                return;
+            }
+            throw $e;
+        }
+    }
+
+    private static function insertBuild($record, $updateTimestamp = true)
+    {
+        if ($updateTimestamp) {
+            if (!isset($record['created_at'])) {
+                $record['created_at'] = date('Y-m-d H:i:s');
+            }
+            if (!isset($record['updated_at'])) {
+                $record['updated_at'] = date('Y-m-d H:i:s');
+            }
+        }
+        return $record;
+    }
+
+    private static function insertAllBuild($records, $updateTimestamp = true)
+    {
+        if ($updateTimestamp) {
+            foreach ($records as $i => $record) {
+                if (!isset($record['created_at'])) {
+                    $records[$i]['created_at'] = date('Y-m-d H:i:s');
+                }
+                if (!isset($record['updated_at'])) {
+                    $records[$i]['updated_at'] = date('Y-m-d H:i:s');
+                }
+            }
+        }
+        return $records;
+    }
+
+    /**
+     * @Util 插入多条数据
+     * @param $model string 数据表
+     * @param $records array 多条数据数组
+     * @param $updateTimestamp bool 是否更新时间戳，默认为true
+     * @example
+     * ModelUtil::insertAll('user',[ ['username'=>'aaa','nickname'=>'bbb'], ['username'=>'ccc','nickname'=>'ddd'] ]);
+     */
+    public static function insertAll($model, $records, $updateTimestamp = true)
+    {
+        if (empty($records)) {
+            return;
+        }
+        $records = self::insertAllBuild($records, $updateTimestamp);
+        $m = self::model($model);
+        DB::table($m->getTable())->insert($records);
+    }
+
+    /**
+     * 插入多条数据（如遇冲突后一条条处理）
+     * @param $model string 数据表
+     * @param $records array 多条数据数组
+     * @param $updateTimestamp bool 是否更新时间戳，默认为true
+     * @example
+     * ModelUtil::insertAll('user',[ ['username'=>'aaa','nickname'=>'bbb'], ['username'=>'ccc','nickname'=>'ddd'] ]);
+     */
+    public static function insertAllSafely($model, $records, $updateTimestamp = true)
+    {
+        if (empty($records)) {
+            return;
+        }
+        $records = self::insertAllBuild($records, $updateTimestamp);
+        $m = self::model($model);
+        $batchFailed = false;
+        try {
+            DB::table($m->getTable())->insert($records);
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            if (Str::contains($message, 'Duplicate entry')) {
+                $batchFailed = true;
+            } else {
+                Log::info('ModelUtil.insertAllSafely.BatchError - ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+                throw $e;
+            }
+        }
+        if ($batchFailed) {
+            foreach ($records as $record) {
+                try {
+                    DB::table($m->getTable())->insert($record);
+                } catch (\Exception $e) {
+                    $message = $e->getMessage();
+                    if (Str::contains($message, 'Duplicate entry')) {
+                        continue;
+                    } else {
+                        Log::info('ModelUtil.insertAllSafely.OneError - ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+                        throw $e;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 根据条件新增、更新或删除已有数据
+     * @param $model string 数据表
+     * @param $records array 多条数据数组
+     * @param $where array 条件数组
+     * @param $keyName string 主键名称，默认为id
+     * @return array
+     */
+    public static function insertOrUpdateOrDelete($model, $records, $where = [], $idName = 'id')
+    {
+        if (empty($records)) {
+            return $records;
+        }
+        $existIds = self::values($model, $idName, $where);
+        $newIds = array_filter(ArrayUtil::flatItemsByKey($records, $idName));
+        list($_, $deleteIds) = ArrayUtil::diff($existIds, $newIds);
+        if (!empty($deleteIds)) {
+            self::model($model)->where($where)->whereIn($idName, $deleteIds)->delete();
+        }
+        foreach ($records as $i => $record) {
+            foreach ($where as $k => $v) {
+                $records[$i][$k] = $v;
+            }
+        }
+        foreach ($records as $i => $record) {
+            $record = self::insertBuild($record);
+            if (empty($record[$idName])) {
+                unset($record[$idName]);
+                $records[$i][$idName] = self::model($model)->insertGetId($record);
+            } else {
+                unset($record['created_at']);
+                self::model($model)->where($idName, $record[$idName])->update($record);
+            }
+        }
+        return $records;
+    }
+
+    /**
+     * 删除记录
+     * @param $model string 数据表
+     * @param $where array|int 条件数组或数据ID
+     * @return int 被删除的记录数量
+     * @example
+     * // 删除ID为1的用户
+     * ModelUtil::delete('user',1);
+     * // 删除用户名为aaa的用户
+     * ModelUtil::delete('user',['username'=>'aaa']);
+     *
+     * @Util
+     */
+    public static function delete($model, $where)
+    {
+        if (is_string($where) || is_numeric($where)) {
+            $where = ['id' => $where];
+        }
+        return self::model($model)->where($where)->delete();
+    }
+
+    /**
+     * 删除记录
+     * @param $model string 数据表
+     * @param $field string 字段
+     * @param $operator string 操作符
+     * @param $value string 值
+     * @return int 被删除的记录数量
+     * @example
+     * ModelUtil::deleteOperator('user','id','>',5);
+     */
+    public static function deleteOperator($model, $field, $operator, $value)
+    {
+        return self::model($model)->where($field, $operator, $value)->delete();
+    }
+
+    /**
+     * 删除记录
+     * @param $model
+     * @param $values
+     * @param string $field
+     * @return int 被删除的记录数量
+     */
+    public static function deleteIn($model, $values, $field = 'id')
+    {
+        if (empty($values)) {
+            return 0;
+        }
+        return self::model($model)->whereIn($field, $values)->delete();
+    }
+
+    /**
+     * 更新表中全部数据，慎用
+     * @param $model
+     * @param $record
+     * @param string[] $where
+     */
+    public static function updateAll($model, $record, $where = ['id', '>', '0'])
+    {
+        self::model($model)->where($where[0], $where[1], $where[2])->update($record);
+    }
+
+    /**
+     * @Util更新数据表
+     * @param $model string 数据库
+     * @param $where int|array 更新条件
+     * @param $record array 更新的数据数组
+     * @return int|null 返回更新的数量，如果是0或null表示没有更新数据
+     * @example
+     * ModelUtil::update('user',1,['password'=>'123456']);
+     * ModelUtil::update('user',['username'=>'xxx'],['password'=>'123456']);
+     */
+    public static function update($model, $where, $record)
+    {
+        if (empty($where) || empty($record)) {
+            return 0;
+        }
+        if (is_string($where) || is_numeric($where)) {
+            $where = ['id' => $where];
+        }
+        return self::model($model)->where($where)->update($record);
+    }
+
+    public static function first($model, $where, $fields = ['*'], $order = null)
+    {
+        if (is_string($where) || is_numeric($where)) {
+            $where = ['id' => $where];
+        }
+        if ($order) {
+            $m = self::model($model)->where($where)->orderBy($order[0], $order[1])->first($fields);
+        } else {
+            $m = self::model($model)->where($where)->first($fields);
+        }
+        if (empty($m)) {
+            return null;
+        }
+        return $m->toArray();
+    }
+
+    /**
+     * @Util 获取单条记录
+     * @param $model string 数据表
+     * @param $where int|array 条件
+     * @param  $fields array 数据表字段
+     * @param $order array 排序，如 ['id','asc']
+     * @return array|null 数据记录
+     * @example
+     * ModelUtil::get('user',1);
+     * ModelUtil::get('user',['username'=>'xxx']);
+     * 更复杂的数据获取可以使用 ModelUtil::model('xxx') 进行操作
+     */
+    public static function get($model, $where, $fields = ['*'], $order = null)
+    {
+        if (null === $where) {
+            return null;
+        }
+        if (is_string($where) || is_numeric($where)) {
+            $where = ['id' => $where];
+        }
+        $model = self::model($model)->where($where);
+        if (!empty($order)) {
+            $model = $model->orderBy($order[0], $order[1]);
+        }
+        $m = $model->first($fields);
+        if (empty($m)) {
+            return null;
+        }
+        return $m->toArray();
+    }
+
+    public static function getOr404($model, $where, $fields = ['*'], $order = null)
+    {
+        $one = self::get($model, $where, $fields, $order);
+        if (empty($one)) {
+            abort(404, L('PageNotFound'));
+        }
+        return $one;
+    }
+
+    public static function getOrCreate($model, $where)
+    {
+        if (is_string($where) || is_numeric($where)) {
+            $where = ['id' => $where];
+        }
+        $m = self::model($model)->where($where)->first();
+        if (empty($m)) {
+            self::insert($model, $where);
+            $m = self::model($model)->where($where)->first();
+        }
+        return $m->toArray();
+    }
+
+    public static function getWithCache($model, $where)
+    {
+        static $map = [];
+        $flag = serialize(['model' => $model, 'where' => $where]);
+        if (!array_key_exists($flag, $map)) {
+            $map[$flag] = self::get($model, $where);
+        }
+        return $map[$flag];
+    }
+
+    public static function getWithLock($model, $where, $fields = ['*'])
+    {
+        if (is_string($where) || is_numeric($where)) {
+            $where = ['id' => $where];
+        }
+        $m = self::model($model)->where($where)->lockForUpdate()->first($fields);
+        if (empty($m)) {
+            return null;
+        }
+        return $m->toArray();
+    }
+
+    public static function count($model, $where = [])
+    {
+        if (is_string($where) || is_numeric($where)) {
+            $where = ['id' => $where];
+        }
+        if (empty($where)) {
+            return self::model($model)->count();
+        }
+        return self::model($model)->where($where)->count();
+    }
+
+    public static function exists($model, $where)
+    {
+        return self::count($model, $where) > 0;
+    }
+
+    public static function batch($model, $nextId, $batchSize = 1000, $where = [], $fields = ['*'], $idName = 'id', $idSort = 'asc')
+    {
+        $records = self::model($model)->where($where)->where($idName, $idSort == 'asc' ? '>' : '<', $nextId)->limit($batchSize)->orderBy($idName, $idSort)->get($fields)->toArray();
+        foreach ($records as $item) {
+            switch ($idSort) {
+                case 'asc':
+                    $nextId = max($nextId, $item[$idName]);
+                    break;
+                default:
+                    $nextId = min($nextId, $item[$idName]);
+                    break;
+            }
+        }
+        return [
+            'records' => $records,
+            'nextId' => $nextId,
+        ];
+    }
+
+    public static function allFirstGroupOrder($table, $whereRaw, $groupByField, $orderByField)
+    {
+        $table = ModelManageUtil::table($table);
+        return ModelManageUtil::query("SELECT * FROM (SELECT * FROM $table WHERE $whereRaw ORDER BY $orderByField DESC) AS t GROUP BY $groupByField");
+    }
+
+    public static function all($model, $where = [], $fields = ['*'], $order = null)
+    {
+        if ($order) {
+            return self::model($model)->where($where)->orderBy($order[0], $order[1])->get($fields)->toArray();
+        }
+        return self::model($model)->where($where)->get($fields)->toArray();
+    }
+
+    public static function allMap($model, $where = [], $fields = ['*'], $order = null, $mapId = 'id')
+    {
+        return array_build(self::all($model, $where, $fields, $order), function ($k, $v) use ($mapId) {
+            return [$v[$mapId], $v];
+        });
+    }
+
+    public static function allIn($model, $field, $in, $fields = ['*'])
+    {
+        if (empty($in)) {
+            return [];
+        }
+        return self::model($model)->whereIn($field, $in)->get($fields)->toArray();
+    }
+
+    public static function allInWithOrder($model, $field, $in, $fields = ['*'])
+    {
+        if (empty($in)) {
+            return [];
+        }
+        $map = array_build(self::allIn($model, $field, $in, $fields), function ($k, $v) use ($field) {
+            return [$v[$field], $v];
+        });
+        $records = [];
+        foreach ($in as $item) {
+            if (isset($map[$item])) {
+                $records[] = $map[$item];
+            }
+        }
+        return $records;
+    }
+
+    public static function allInMap($model, $field, $in, $fields = ['*'], $mapId = 'id')
+    {
+        return array_build(self::allIn($model, $field, $in, $fields), function ($k, $v) use ($mapId) {
+            return [$v[$mapId], $v];
+        });
+    }
+
+    public static function allIds($model, $where, $limit = -1, $idKey = 'id')
+    {
+        $query = self::model($model)->where($where);
+        if ($limit > 0) {
+            $query = $query->limit($limit);
+        }
+        $records = $query->get([$idKey]);
+        return ArrayUtil::flatItemsByKey($records, $idKey);
+    }
+
+    public static function values($model, $field, $where = [], $order = null)
+    {
+        $flat = false;
+        if (!is_array($field)) {
+            $fields = [$field];
+            $flat = true;
+        } else {
+            $fields = $field;
+        }
+        $ms = self::model($model)->where($where);
+        if (!empty($order)) {
+            $ms = $ms->orderBy($order[0], $order[1]);
+        }
+        $ms = $ms->get($fields)->toArray();
+        if ($flat) {
+            return array_map(function ($item) use ($field) {
+                return $item[$field];
+            }, $ms);
+        }
+        return $ms;
+    }
+
+    public static function valueMap($model, $fieldKey, $fieldValue, $where = [])
+    {
+        $ms = self::model($model)->where($where)->get([$fieldKey, $fieldValue])->toArray();
+        return array_build($ms, function ($k, $v) use ($fieldKey, $fieldValue) {
+            return [$v[$fieldKey], $v[$fieldValue]];
+        });
+    }
+
+    /**
+     * 关联表列出关联信息
+     *
+     * @param $model string 表名称
+     * @param $sourceField string 外键列名
+     * @param $sourceValue mixed 外键值
+     * @param $filter array 关联过滤条件
+     * @param $extraFields array 额外返回字段
+     * @param $idField string 关系表ID列名
+     * @return array
+     */
+    public static function relationList($model, $sourceField, $sourceValue, $filter = [], $extraFields = [], $idField = 'id')
+    {
+        return self::all($model, array_merge([$sourceField => $sourceValue], $filter), array_merge([$idField, $sourceField], $extraFields));
+    }
+
+    /**
+     * 关联表清除
+     * @param $model string 表名称
+     * @param $field string 外键列名
+     * @param $value mixed 外键值
+     * @return int
+     */
+    public static function relationClean($model, $field, $value)
+    {
+        return self::model($model)->where($field, $field)->delete();
+    }
+
+    /**
+     * 关系表关联操作
+     *
+     * @param $model string 表名称
+     * @param $sourceField string 外键列名
+     * @param $sourceValue mixed 外键值
+     * @param $targetField string 关联列名
+     * @param $targetValues array 关联列值
+     * @param $filter array 关联过滤条件
+     * @param $idField string 关系表ID列名
+     *
+     * @example
+     *
+     * 表 user_article ( corpId, userId, articleId )
+     * relationAssign('user_article','userId',1,'articleId',[4,5,6],['corpId'=>5])
+     *
+     * 表 user_article ( userId, articleId )
+     * relationAssign('user_article','userId',1,'articleId',[4,5,6])
+     */
+    public static function relationAssign($model, $sourceField, $sourceValue, $targetField, $targetValues, $filter = [], $idField = 'id')
+    {
+        if (empty($targetValues)) {
+            $targetValues = [];
+        }
+        $relations = self::all($model, array_merge([$sourceField => $sourceValue], $filter), [$idField, $targetField]);
+        $deletes = [];
+        $inserts = [];
+        $existsTargetMap = [];
+        foreach ($relations as $relation) {
+            $existsTargetMap[$relation[$targetField]] = true;
+            if (!in_array($relation[$targetField], $targetValues)) {
+                $deletes[] = $relation[$idField];
+                continue;
+            }
+        }
+        foreach ($targetValues as $targetValue) {
+            if (!isset($existsTargetMap[$targetValue])) {
+                $inserts[] = array_merge([
+                    $sourceField => $sourceValue,
+                    $targetField => $targetValue,
+                ], $filter);
+            }
+        }
+        $changed = false;
+        if (!empty($deletes)) {
+            self::deleteIn($model, $deletes, $idField);
+            $changed = true;
+        }
+        if (!empty($inserts)) {
+            self::insertAll($model, $inserts);
+            $changed = true;
+        }
+        return $changed;
+    }
+
+    public static function next($model, $current, $where = [], $sortField = 'id', $fields = ['*'])
+    {
+        $record = self::model($model)
+            ->where($where)
+            ->where($sortField, '>', $current)
+            ->orderBy($sortField, 'asc')
+            ->first($fields);
+        return $record ? $record->toArray() : null;
+    }
+
+    public static function prev($model, $current, $where = [], $sortField = 'id', $fields = ['*'])
+    {
+        $record = self::model($model)
+            ->where($where)
+            ->where($sortField, '<', $current)
+            ->orderBy($sortField, 'desc')
+            ->first($fields);
+        return $record ? $record->toArray() : null;
+    }
+
+    public static function sortNext($model, $where = [], $sortField = 'sort')
+    {
+        return intval(self::model($model)->where($where)->max($sortField)) + 1;
+    }
+
+    public static function sortMove($model, $id, $direction = 'up|down|top|bottom', $filter = [], $idField = 'id', $sortField = 'sort')
+    {
+        if (!in_array($direction, ['up', 'down', 'top', 'bottom'])) {
+            return false;
+        }
+        $exists = self::all($model, $filter, [$idField, $sortField], [$sortField, 'asc']);
+        $existsIndex = -1;
+        foreach ($exists as $index => $exist) {
+            if ($exist[$idField] == $id) {
+                $existsIndex = $index;
+                break;
+            }
+        }
+        if ($existsIndex < 0) {
+            return false;
+        }
+        switch ($direction) {
+            case 'up':
+                if ($existsIndex > 0) {
+                    self::update($model, $exists[$existsIndex][$idField], [$sortField => $exists[$existsIndex - 1][$sortField]]);
+                    self::update($model, $exists[$existsIndex - 1][$idField], [$sortField => $exists[$existsIndex][$sortField]]);
+                    return true;
+                }
+                break;
+            case 'down':
+                if ($existsIndex < count($exists) - 1) {
+                    self::update($model, $exists[$existsIndex][$idField], [$sortField => $exists[$existsIndex + 1][$sortField]]);
+                    self::update($model, $exists[$existsIndex + 1][$idField], [$sortField => $exists[$existsIndex][$sortField]]);
+                    return true;
+                }
+                break;
+            case 'top':
+                if ($existsIndex > 0) {
+                    $number = 2;
+                    foreach ($exists as $index => $exist) {
+                        if ($index == $existsIndex) {
+                            self::update($model, $exist[$idField], [$sortField => 1]);
+                        } else {
+                            self::update($model, $exist[$idField], [$sortField => $number]);
+                            $number++;
+                        }
+                    }
+                    return true;
+                }
+                break;
+            case 'bottom':
+                if ($existsIndex < count($exists) - 1) {
+                    $number = 1;
+                    foreach ($exists as $index => $exist) {
+                        if ($index == $existsIndex) {
+                            continue;
+                        }
+                        self::update($model, $exist[$idField], [$sortField => $number]);
+                        $number++;
+                    }
+                    self::update($model, $exists[$existsIndex][$idField], [$sortField => $number]);
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+
+    /**
+     * JOIN表数据
+     *
+     * @param $records array 记录数据
+     * @param $dataModelKey string 记录数据中的模型键名
+     * @param $dataMergedKey string 记录数据中的合并键名
+     * @param $model string JOIN表名称
+     * @param $modelPrimaryKey string JOIN表主键
+     *
+     *
+     * @example
+     *
+     * 原数据
+     * $blogs = [
+     *  ['memberUserId' => 1, 'title'=>'test1' , ],
+     *  ['memberUserId' => 2, 'title'=>'test2' , ],
+     * ];
+     * ModelUtil::join($blogs, 'memberUserId', '_member', 'member_user', 'id');
+     *
+     * 结果数据
+     * $blogs = [
+     *  ['memberUserId' => 1, 'title'=>'test1' , '_member'=>['id'=>1, 'username'=>'test1'] ],
+     *  ['memberUserId' => 2, 'title'=>'test2' , '_member'=>['id'=>1, 'username'=>'test1'] ],
+     * ];
+     */
+    public static function join(&$records,
+                                $dataModelKey = 'userId',
+                                $dataMergedKey = '_user',
+                                $model = 'join_model',
+                                $modelPrimaryKey = 'id',
+                                $modelWhere = [])
+    {
+        if (empty($records)) {
+            return;
+        }
+
+        $ids = array_map(function ($item) use ($dataModelKey) {
+            return $item[$dataModelKey];
+        }, $records);
+
+        $query = self::model($model);
+        if (!empty($modelWhere)) {
+            $query = $query->where($modelWhere);
+        }
+        $joinData = $query->whereIn($modelPrimaryKey, $ids)->get()->toArray();
+
+        $joinDataMap = array_build($joinData, function ($k, $v) use ($modelPrimaryKey) {
+            return [$v[$modelPrimaryKey], $v];
+        });
+
+        foreach ($records as &$item) {
+            $key = $item[$dataModelKey];
+            if (isset($joinDataMap[$key])) {
+                $item[$dataMergedKey] = $joinDataMap[$key];
+            } else {
+                $item[$dataMergedKey] = null;
+            }
+        }
+    }
+
+    public static function joinItems(&$items, $dataModelKey = 'userId', $dataMergedKey = '_user', $model = 'join_model', $modelPrimaryKey = 'id')
+    {
+        if (empty($items)) {
+            return;
+        }
+
+        $ids = [];
+        foreach ($items as $item) {
+            $ids[] = $item->{$dataModelKey};
+        }
+        $ids = array_unique($ids);
+
+        $joinData = self::model($model)->whereIn($modelPrimaryKey, $ids)->get()->toArray();
+
+        $joinDataMap = array_build($joinData, function ($k, $v) use ($modelPrimaryKey) {
+            return [$v[$modelPrimaryKey], $v];
+        });
+
+        foreach ($items as &$item) {
+            $key = $item->{$dataModelKey};
+            if (isset($joinDataMap[$key])) {
+                $item->{$dataMergedKey} = $joinDataMap[$key];
+            } else {
+                $item->{$dataMergedKey} = null;
+            }
+        }
+    }
+
+
+    public static function joinAll(&$records, $dataModelKey = 'userId', $dataMergedKey = '_user', $model = 'join_model', $modelPrimaryKey = 'id')
+    {
+        if (empty($records)) {
+            return;
+        }
+
+        $ids = array_map(function ($item) use ($dataModelKey) {
+            return $item[$dataModelKey];
+        }, $records);
+
+        $joinData = self::model($model)->whereIn($modelPrimaryKey, $ids)->get()->toArray();
+        $joinDataMap = [];
+        foreach ($joinData as $item) {
+            if (array_key_exists($item[$modelPrimaryKey], $joinDataMap)) {
+                $joinDataMap[$item[$modelPrimaryKey]][] = $item;
+            } else {
+                $joinDataMap[$item[$modelPrimaryKey]] = [$item];
+            }
+        }
+
+        foreach ($records as &$item) {
+            $key = $item[$dataModelKey];
+            if (isset($joinDataMap[$key])) {
+                $item[$dataMergedKey] = $joinDataMap[$key];
+            } else {
+                $item[$dataMergedKey] = [];
+            }
+        }
+    }
+
+    public static function paginateMergeConditionParam(&$o, $option)
+    {
+
+        if (!empty($option['whereIn'])) {
+            if (is_array($option['whereIn'][0])) {
+                foreach ($option['whereIn'] as &$whereIn) {
+                    $o = $o->whereIn($whereIn[0], $whereIn[1]);
+                }
+            } else {
+                $o = $o->whereIn($option['whereIn'][0], $option['whereIn'][1]);
+            }
+        }
+
+        if (!empty($option['whereOperate'])) {
+            if (is_array($option['whereOperate'][0])) {
+                foreach ($option['whereOperate'] as &$whereOperate) {
+                    $o = $o->where($whereOperate[0], $whereOperate[1], $whereOperate[2]);
+                }
+            } else {
+                $o = $o->where($option['whereOperate'][0], $option['whereOperate'][1], $option['whereOperate'][2]);
+            }
+        }
+
+        // SECURITY (CWE-89): 字符串形式的 where 会原样进入 whereRaw（无参数绑定）。
+        // 只允许由代码内部构造的受控表达式（常量 / 时间 / 已 intval 的值），严禁传入用户输入；
+        // 优先使用数组形式 $option['where'] = ['field' => $value] 走参数绑定。
+        if (!empty($option['where'])) {
+            if (is_array($option['where'])) {
+                $o = $o->where($option['where']);
+            } else {
+                $o = $o->whereRaw($option['where']);
+            }
+        }
+
+        // SECURITY (CWE-89): whereRaw 建议使用参数化数组形式 ['expression', $bindings]，
+        // 字符串形式无绑定，严禁拼接用户输入，用户数据必须通过 $bindings 传入。
+        if (!empty($option['whereRaw'])) {
+            if (is_array($option['whereRaw'])) {
+                $o = $o->whereRaw($option['whereRaw'][0], $option['whereRaw'][1]);
+            } else {
+                $o = $o->whereRaw($option['whereRaw']);
+            }
+        }
+
+        if (!empty($option['search']) && is_array($option['search'])) {
+            self::querySearchExecute($o, $option['search']);
+        }
+
+        if (!empty($option['filter']) && is_array($option['filter'])) {
+            self::queryFilterExecute($o, $option['filter']);
+        }
+    }
+
+    /**
+     * 对查询执行搜索条件，支持多字段搜索
+     * @param $query Model|Builder 查询对象
+     * @param $searches array 搜索条件
+     * @example
+     * /**
+     * $searches = [];
+     * $searches[] = ['field1'=>['equal'=>value],'field2'=>['equal'=>value]];
+     * $searches[] = ['field1'=>['exp'=>'or', 'equal'=>value1, 'like'=>'value2'],'field2'=>['equal'=>value]];
+     * $searches[] = ['__exp'=>'and|or','field1'=>[...],'field2'=>[...],];
+     */
+    public static function querySearchExecute(&$query, $searches)
+    {
+        foreach ($searches as $searchItem) {
+
+            if (!isset($searchItem['__exp'])) {
+                $searchItem['__exp'] = 'and';
+            } else {
+                $searchItem['__exp'] = strtolower($searchItem['__exp']);
+            }
+
+            $whereExpFirst = true;
+            $whereExp = 'where';
+            if ($searchItem['__exp'] == 'or') {
+                $whereExp = 'orWhere';
+            }
+
+            $query = $query->where(function ($queryBase) use (&$searchItem, $whereExpFirst, $whereExp) {
+
+                foreach ($searchItem as $field => $searchInfo) {
+                    if (in_array($field, ['__exp'])) {
+                        continue;
+                    }
+                    if (!isset($searchInfo['exp'])) {
+                        $searchInfo['exp'] = 'and';
+                    }
+                    $searchInfo['exp'] = strtolower($searchInfo['exp']);
+
+                    if ($whereExpFirst) {
+                        $where = 'where';
+                        $whereExpFirst = false;
+                    } else {
+                        $where = $whereExp;
+                    }
+
+                    $queryBase = $queryBase->$where(function ($query) use (&$field, &$searchInfo) {
+                        $first = true;
+                        foreach ($searchInfo as $k => $v) {
+                            switch ($k) {
+                                case 'likes':
+                                    $query->where(function ($q) use ($v, $field) {
+                                        foreach ($v as $vv) {
+                                            $q->where($field, 'like', '%' . $vv . '%');
+                                        }
+                                    });
+                                    break;
+                                case 'like':
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->where($field, 'like', '%' . $v . '%');
+                                    } else {
+                                        $query->orWhere($field, 'like', '%' . $v . '%');
+                                    }
+                                    break;
+                                case 'leftLike':
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->where($field, 'like', $v . '%');
+                                    } else {
+                                        $query->orWhere($field, 'like', $v . '%');
+                                    }
+                                    break;
+                                case 'rightLike':
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->where($field, 'like', '%' . $v);
+                                    } else {
+                                        $query->orWhere($field, 'like', '%' . $v);
+                                    }
+                                    break;
+                                case 'equal':
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->where($field, '=', $v);
+                                    } else {
+                                        $query->orWhere($field, '=', $v);
+                                    }
+                                    break;
+                                case 'eq':
+                                case 'min':
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->where($field, '>=', $v);
+                                    } else {
+                                        $query->orWhere($field, '>=', $v);
+                                    }
+                                    break;
+                                case 'max':
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->where($field, '<=', $v);
+                                    } else {
+                                        $query->orWhere($field, '<=', $v);
+                                    }
+                                    break;
+                                case 'in':
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->whereIn($field, $v);
+                                    } else {
+                                        $query->whereIn($field, $v, 'or');
+                                    }
+                                    break;
+                                case 'is':
+                                    if (null === $v) {
+                                        if ($first || $searchInfo['exp'] == 'and') {
+                                            $first = false;
+                                            $query->whereNull($field);
+                                        } else {
+                                            $query->orWhereNull($field);
+                                        }
+                                    } else {
+                                        exit('TODO');
+                                    }
+                                    break;
+                                case 'binding':
+                                    // SECURITY (CWE-89): 'binding' 只接受参数化数组形式 ['binding' => [$expression, $bindings]]。
+                                    // 单个值可简写为 ['binding' => [$expression, $value]]（会自动包装为 bindings）。
+                                    // $expression 必须由代码内部构造（用户不可控），用户数据一律放入 $bindings 作为绑定值。
+                                    if (!is_array($v)) {
+                                        BizException::throws('search binding expression must be [expression, bindings]');
+                                    }
+                                    $bindingExpression = isset($v[0]) ? $v[0] : null;
+                                    $bindingValues = isset($v[1]) ? $v[1] : [];
+                                    if (!is_string($bindingExpression) || '' === $bindingExpression) {
+                                        BizException::throws('search binding expression must be [expression, bindings]');
+                                    }
+                                    if (!is_array($bindingValues)) {
+                                        $bindingValues = [$bindingValues];
+                                    }
+                                    if ($first || $searchInfo['exp'] == 'and') {
+                                        $first = false;
+                                        $query->whereRaw($bindingExpression, $bindingValues);
+                                    } else {
+                                        $query->orWhereRaw($bindingExpression, $bindingValues);
+                                    }
+                                    break;
+                                case 'exp':
+                                    break;
+                                default:
+                                    BizException::throws('unknown search exp : ' . $k);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    }
+
+    /**
+     * 对请求执行过滤条件，通常用于用户前台动态筛选
+     * @param $query Model|Builder 查询对象
+     * @param $filters array 过滤条件
+     * @example
+     * $filter = [];
+     * $filter[] = [ 'condition'=>'is', 'field'=>'field1', 'value'=>'value1' ];
+     * $filter[] = [ 'condition'=>'is_not', 'field'=>'field2', 'value'=>'value2' ];
+     * $filter[] = [ 'condition'=>'contains', 'field'=>'field3', 'value'=>'value3' ];
+     * $filter[] = [ 'condition'=>'not_contains', 'field'=>'field4', 'value'=>'value4' ];
+     * $filter[] = [ 'condition'=>'range', 'field'=>'field5', 'value'=>['value5_min', 'value5_max'] ];
+     * $filter[] = [ 'condition'=>'is_empty', 'field'=>'field6' ];
+     * $filter[] = [ 'condition'=>'is_not_empty', 'field'=>'field7' ];
+     * $filter[] = [ 'condition'=>'gt', 'field'=>'field8', 'value'=>'value8' ];
+     * $filter[] = [ 'condition'=>'egt', 'field'=>'field9', 'value'=>'value9' ];
+     * $filter[] = [ 'condition'=>'lt', 'field'=>'field10', 'value'=>'value10' ];
+     * $filter[] = [ 'condition'=>'elt', 'field'=>'field11', 'value'=>'value11' ];
+     */
+    public static function queryFilterExecute(&$query, $filters)
+    {
+        $query = $query->where(function ($q) use (&$filters) {
+            foreach ($filters as $filter) {
+                switch ($filter['condition']) {
+                    case 'is':
+                        $q = $q->where([$filter['field'] => $filter['value']]);
+                        break;
+                    case 'is_not':
+                        $q = $q->where($filter['field'], '<>', $filter['value']);
+                        break;
+                    case 'contains':
+                        $q = $q->where($filter['field'], 'like', '%' . $filter['value'] . '%');
+                        break;
+                    case 'not_contains':
+                        $q = $q->where($filter['field'], 'not like', '%' . $filter['value'] . '%');
+                        break;
+                    case 'range':
+                        if (!empty($filter['value'][0])) {
+                            $q = $q->where($filter['field'], '>=', $filter['value'][0]);
+                        }
+                        if (!empty($filter['value'][1])) {
+                            $q = $q->where($filter['field'], '<=', $filter['value'][1]);
+                        }
+                        break;
+                    case 'is_empty':
+                        $q = $q->where($filter['field'], '=', '');
+                        break;
+                    case 'is_not_empty':
+                        $q = $q->where($filter['field'], '<>', '');
+                        break;
+                    case 'gt':
+                        $q = $q->where($filter['field'], '>', $filter['value']);
+                        break;
+                    case 'egt':
+                        $q = $q->where($filter['field'], '>=', $filter['value']);
+                        break;
+                    case 'lt':
+                        $q = $q->where($filter['field'], '<', $filter['value']);
+                        break;
+                    case 'elt':
+                        $q = $q->where($filter['field'], '<=', $filter['value']);
+                        break;
+                }
+            }
+        });
+    }
+
+    public static function paginateQuick($model, $page = null, $pageSize = null, $option = [], $pageUrl = '?page={page}')
+    {
+        if (null === $page) {
+            $page = InputPackage::buildFromInput()->getPage();
+        }
+        if (null === $pageSize) {
+            $pageSize = InputPackage::buildFromInput()->getPageSize();
+        }
+        $paginateData = self::paginate($model, $page, $pageSize, $option);
+
+        return [
+            'records' => $paginateData['records'],
+            'total' => $paginateData['total'],
+            'page' => $page,
+            'pageSize' => $pageSize,
+            'pageHtml' => PageHtmlUtil::render($paginateData['total'], $pageSize, $page, $pageUrl)
+        ];
+    }
+
+
+    public static function paginate($model, $page, $pageSize, $option = [])
+    {
+        $m = self::model($model);
+        if (!empty($option['joins'])) {
+            $select = [];
+            $select[] = $model . '.*';
+            foreach ($option['joins'] as $join) {
+                if (!empty($join['table'])) {
+                    $m = $m->leftJoin($join['table'][0], $join['table'][1], $join['table'][2], $join['table'][3]);
+                }
+                if (!empty($join['fields'])) {
+                    foreach ($join['fields'] as $fieldAlias => $fieldTable) {
+                        array_push($select, "$fieldTable as $fieldAlias");
+                    }
+                }
+            }
+            $m = call_user_func_array(array($m, 'select'), $select);
+        }
+
+        self::paginateMergeConditionParam($m, $option);
+
+        if (!empty($option['order'])) {
+            if (is_array($option['order'][0])) {
+                foreach ($option['order'] as &$order) {
+                    $m = $m->orderBy($order[0], $order[1]);
+                }
+            } else {
+                $m = $m->orderBy($option['order'][0], $option['order'][1]);
+            }
+        }
+
+        if (!empty($option['fields'])) {
+            $m = $m->select($option['fields']);
+        }
+
+        $m = $m->paginate($pageSize, ['*'], 'page', $page)->toArray();
+
+        return [
+            'total' => $m['total'],
+            'records' => $m['data']
+        ];
+    }
+
+
+    public static function transactionBegin()
+    {
+        DB::beginTransaction();
+    }
+
+    public static function transactionRollback()
+    {
+        DB::rollback();
+    }
+
+    public static function transactionCommit()
+    {
+        DB::commit();
+    }
+
+    public static function isFieldUniqueForInsertOrUpdate($model, $id, $field, $value, $where = [])
+    {
+        $exists = self::all($model, array_merge([$field => $value], $where));
+        if (empty($exists)) {
+            return true;
+        }
+        if (count($exists) == 1 && $id > 0 && $id == $exists[0]['id']) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function replaceConditionParamField(&$option, $fieldMap = [])
+    {
+        if (empty($fieldMap)) {
+            return;
+        }
+        if (!empty($option['search']) && is_array($option['search'])) {
+            foreach ($option['search'] as &$searchItem) {
+                foreach ($searchItem as $field => $searchInfo) {
+                    if (array_key_exists($field, $fieldMap)) {
+                        unset($searchItem[$field]);
+                        $searchItem[$fieldMap[$field]] = $searchInfo;
+                    }
+                }
+            }
+        }
+
+        if (!empty($option['whereIn'])) {
+            if (is_array($option['whereIn'][0])) {
+                foreach ($option['whereIn'] as &$whereIn) {
+                    if (array_key_exists($whereIn[0], $fieldMap)) {
+                        $whereIn[0] = $fieldMap[$whereIn[0]];
+                    }
+                }
+            } else {
+                if (array_key_exists($option['whereIn'][0], $fieldMap)) {
+                    $option['whereIn'][0] = $fieldMap[$option['whereIn'][0]];
+                }
+            }
+        }
+
+        if (!empty($option['whereOperate'])) {
+            if (is_array($option['whereOperate'][0])) {
+                foreach ($option['whereOperate'] as &$whereOperate) {
+                    if (array_key_exists($whereOperate[0], $fieldMap)) {
+                        $whereOperate[0] = $fieldMap[$whereOperate[0]];
+                    }
+                }
+            } else {
+                if (array_key_exists($option['whereOperate'][0], $fieldMap)) {
+                    $option['whereOperate'][0] = $fieldMap[$option['whereOperate'][0]];
+                }
+            }
+        }
+
+        if (!empty($option['where'])) {
+            foreach ($option['where'] as $k => $item) {
+                if (array_key_exists($k, $fieldMap)) {
+                    unset($option['where'][$k]);
+                    $option['where'][$fieldMap[$k]] = $item;
+                }
+            }
+        }
+    }
+
+    public static function decodeRecordBoolean(&$record, $keyArray)
+    {
+        if (empty($record)) {
+            return;
+        }
+        if (is_string($keyArray)) {
+            $keyArray = [$keyArray];
+        }
+        foreach ($keyArray as $key) {
+            $record[$key] = $record[$key] ? true : false;
+        }
+    }
+
+    public static function decodeRecordsBoolean(&$records, $keyArray)
+    {
+        if (empty($records)) {
+            return;
+        }
+        if (is_string($keyArray)) {
+            $keyArray = [$keyArray];
+        }
+        foreach ($records as &$record) {
+            foreach ($keyArray as $key) {
+                $record[$key] = $record[$key] ? true : false;
+            }
+        }
+    }
+
+    public static function decodeRecordsNumberArray(&$records, $keyArray)
+    {
+        if (empty($records)) {
+            return;
+        }
+        if (is_string($keyArray)) {
+            $keyArray = [$keyArray];
+        }
+        foreach ($records as &$record) {
+            foreach ($keyArray as $key) {
+                $values = @json_decode($record[$key], true);
+                if (!empty($values)) {
+                    $record[$key] = array_map(function ($o) {
+                        return intval($o);
+                    }, $values);
+                } else {
+                    $record[$key] = [];
+                }
+            }
+        }
+    }
+
+    public static function decodeRecordJson(&$record, $keyArray, $default = [])
+    {
+        if (empty($record)) {
+            return;
+        }
+        if (is_string($keyArray)) {
+            $keyArray = [$keyArray];
+        }
+        foreach ($keyArray as $key) {
+            $record[$key] = @json_decode($record[$key], true);
+            if (empty($record[$key])) {
+                $record[$key] = $default;
+            }
+        }
+    }
+
+    public static function decodeRecordsJson(&$records, $keyArray, $default = [])
+    {
+        if (empty($records)) {
+            return;
+        }
+        if (is_string($keyArray)) {
+            $keyArray = [$keyArray];
+        }
+        foreach ($records as &$record) {
+            foreach ($keyArray as $key) {
+                $record[$key] = @json_decode($record[$key], true);
+                if (empty($record[$key])) {
+                    $record[$key] = $default;
+                }
+            }
+        }
+    }
+
+    public static function encodeRecordJson(&$record, $keyArray, $default = [])
+    {
+        if (empty($record)) {
+            return;
+        }
+        if (is_string($keyArray)) {
+            $keyArray = [$keyArray];
+        }
+        foreach ($keyArray as $key) {
+            if (empty($record[$key])) {
+                $record[$key] = $default;
+            }
+            $record[$key] = @SerializeUtil::jsonEncode($record[$key]);
+        }
+    }
+
+    public static function encodeRecordsJson(&$records, $keyArray, $default = [])
+    {
+        if (empty($records)) {
+            return;
+        }
+        if (is_string($keyArray)) {
+            $keyArray = [$keyArray];
+        }
+        foreach ($records as &$record) {
+            foreach ($keyArray as $key) {
+                if (empty($record[$key])) {
+                    $record[$key] = $default;
+                }
+                $record[$key] = @SerializeUtil::jsonEncode($record[$key]);
+            }
+        }
+    }
+
+    /**
+     * 增加或减少数值，会考虑到NULL的情况
+     * @param $model string
+     * @param $where int|array
+     * @param $field string
+     * @param $value int 记录更新数量
+     */
+    public static function increase($model, $where, $field, $value = 1)
+    {
+        return ModelUtil::update($model, $where, [
+            $field => DB::raw('IFNULL(' . $field . ',0)' . ($value > 0 ? '+' . $value : '-' . abs($value)))
+        ]);
+    }
+
+    public static function change($model, $where, $field, $value)
+    {
+        if (is_numeric($where) || is_string($where)) {
+            $where = ['id' => $where];
+        }
+        if ($value > 0) {
+            self::model($model)->where($where)->increment($field, $value);
+        } else {
+            self::model($model)->where($where)->decrement($field, -$value);
+        }
+    }
+
+    public static function sum($model, $field, $where = [])
+    {
+        return self::model($model)->where($where)->sum($field);
+    }
+
+    public static function max($model, $field, $where = [])
+    {
+        return self::model($model)->where($where)->max($field);
+    }
+
+    public static function traverse($model, $key, $default = null)
+    {
+        if (is_array($model)) {
+            return array_get($model, $key, $default);
+        }
+
+        if (is_null($key)) {
+            return $model;
+        }
+
+        if (($model instanceof \stdClass) && isset($model->{$key})) {
+            return $model->{$key};
+        } else if (is_array($model) && isset($model[$key])) {
+            return $model[$key];
+        } else if (($model instanceof Model) && array_key_exists($key, $model->getAttributes())) {
+            return $model->$key;
+        }
+
+        foreach (explode('.', $key) as $segment) {
+            try {
+                $model = $model->$segment;
+            } catch (\Exception $e) {
+                return value($default);
+            }
+        }
+
+        return $model;
+    }
+
+    /**
+     * @param $query \Illuminate\Database\Eloquent\Builder
+     * @param $type
+     * @param $column
+     */
+    public static function queryRemoveCondition($query, $type, $column = null, $option = [])
+    {
+        $option = array_merge($option, [
+            'cleanOrder' => true,
+        ]);
+
+        $type = strtolower($type);
+        if (!is_callable($column)) {
+            $columnName = $column;
+            $column = function ($v) use ($columnName) {
+                return $v['column'] == $columnName;
+            };
+        }
+
+        BizException::throwsIf('Unsupported type ' . $type, !in_array($type, ['basic', 'in']));
+
+        $wheres = $query->getQuery()->wheres;
+        $bindings = $query->getQuery()->getRawBindings();
+        $bindingsWhere = $bindings['where'];
+        $bindingIndex = 0;
+        $wheresArray = [];
+        $bindingsWhereArray = [];
+        foreach ($wheres as $v) {
+            $wheresArray[] = $v;
+            $bindingsCount = self::getBindingsCount([$v]);
+            if ($bindingsCount > 0) {
+                $bindingsWhereArray[] = array_slice($bindingsWhere, 0, $bindingsCount);
+            } else {
+                $bindingsWhereArray[] = [];
+            }
+        }
+
+        //echo '$type - ' . $type . PHP_EOL . PHP_EOL;
+        //echo '$column - ' . json_encode($column) . PHP_EOL . PHP_EOL;
+        //echo '$wheresArray - ' . json_encode($wheresArray, JSON_PRETTY_PRINT) . PHP_EOL . PHP_EOL;
+        //echo '$bindingsWhereArray - ' . json_encode($bindingsWhereArray, JSON_PRETTY_PRINT) . PHP_EOL . PHP_EOL;
+
+        $newWheres = [];
+        $newBindingsWhere = [];
+        foreach ($wheresArray as $i => $v) {
+            if (strtolower($v['type']) == $type && call_user_func($column, $v)) {
+                continue;
+            }
+            $newWheres[] = $v;
+            $newBindingsWhere = array_merge($newBindingsWhere, $bindingsWhereArray[$i]);
+        }
+        //echo '$newWheres - ' . json_encode($newWheres, JSON_PRETTY_PRINT) . PHP_EOL . PHP_EOL;
+        //echo '$newBindingsWhere - ' . json_encode($newBindingsWhere, JSON_PRETTY_PRINT) . PHP_EOL . PHP_EOL;
+        //exit();
+        $query->getQuery()->wheres = $newWheres;
+        $query->getQuery()->setBindings($newBindingsWhere);
+
+        if (!empty($option['cleanOrder'])) {
+            $query->getQuery()->orders = null;
+        }
+
+        return $query;
+    }
+
+    private static function getBindingsCount($wheres)
+    {
+        $count = 0;
+        foreach ($wheres as $v) {
+            switch (strtolower($v['type'])) {
+                case 'in':
+                    $count += count($v['values']);
+                    break;
+                case 'raw':
+                    break;
+                case 'nested':
+                    $count += self::getBindingsCount($v['query']->wheres);
+                    break;
+                default:
+                    $count++;
+                    break;
+            }
+        }
+        return $count;
+    }
+
+    public static function quoteLikeKeywords($keywords)
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\\\', '\\%', '\\_'], $keywords);
+    }
+
+    public static function hasAtttibute($item, $key)
+    {
+        if ($item instanceof Model || $item instanceof EmptyItem) {
+            $attributes = $item->getAttributes();
+            return array_key_exists($key, $attributes)
+                || method_exists($item, $key);
+        } else if ($item instanceof \stdClass) {
+            return property_exists($item, $key);
+        }
+        return false;
+    }
+
+    public static function toArray($item)
+    {
+        if ($item instanceof Model) {
+            return $item->toArray();
+        } else if ($item instanceof \stdClass) {
+            return (array)$item;
+        } else {
+            return $item;
+        }
+    }
+
+    public static function itemsToArray($items)
+    {
+        $records = [];
+        foreach ($items as $item) {
+            $records[] = self::toArray($item);
+        }
+        return $records;
+    }
+
+}

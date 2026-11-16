@@ -1,0 +1,2302 @@
+@header-box-shadow: var(--box-shadow);
+
+.ub-header {
+    height: 3.75rem;
+    background-color: var(--color-content-bg);
+    box-shadow: inset 0 -0.0625rem 0 var(--color-body-line);
+    // 注意：不要在这里使用 backdrop-filter / filter / transform，
+    // 它们会让本元素成为 position:fixed 后代的包含块，
+    // 从而破坏小屏下的抽屉菜单（.menu / .nav 使用 fixed 定位）。
+    transition: var(--transition);
+
+    &.primary {
+        background: var(--color-primary);
+
+        .menu {
+            a {
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover, &.active {
+                    color: #fff;
+                    background: rgba(255, 255, 255, 0.16);
+                }
+            }
+        }
+
+        .menu-toggle {
+            color: #fff;
+        }
+
+    }
+
+    &.transparent {
+        background-color: transparent;
+        box-shadow: none;
+
+        .menu-toggle {
+            color: #fff;
+        }
+
+        .menu {
+            .item {
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover {
+                    color: #fff;
+                }
+
+                &.active {
+                    color: rgba(255, 255, 255, 0.7);
+                }
+            }
+        }
+    }
+
+    &.lg {
+        padding: 0.625rem 0;
+
+        .menu {
+            .item {
+                font-size: 1.125rem;
+            }
+        }
+    }
+
+    &.absolute {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 2000;
+    }
+
+    .logo {
+        float: left;
+        display: block;
+
+        a {
+            line-height: 3.75rem;
+            height: 3.75rem;
+            display: block;
+            font-size: 1.25rem;
+            vertical-align: middle;
+
+            img {
+                height: 3.75rem;
+                vertical-align: middle;
+                display: block;
+            }
+
+            span {
+                vertical-align: middle;
+                display: block;
+                color: var(--color-heading);
+                font-weight: 600;
+                letter-spacing: -0.01em;
+            }
+        }
+    }
+
+    .menu {
+        float: right;
+        padding: 0.625rem 0;
+
+        a {
+            display: inline-block;
+            line-height: 2.5rem;
+            color: var(--color-text);
+            padding: 0 0.625rem;
+            margin-left: 1.25rem;
+            font-size: 0.875rem;
+            border-radius: 999px;
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-primary);
+                background: var(--color-body-block-bg);
+            }
+
+            &.active {
+                color: var(--color-primary);
+                background: var(--color-primary-light-bg);
+            }
+        }
+    }
+
+    .menu-toggle {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 50rem) {
+
+    .ub-header {
+        &.transparent {
+            background: transparent;
+
+            .menu {
+                .item {
+                    color: var(--color-text);
+
+                    &:hover {
+                        color: var(--color-primary);
+                    }
+                }
+            }
+        }
+
+        &.lg {
+            padding: 0;
+        }
+    }
+
+    .ub-header {
+        text-align: center;
+        height: 3.125rem;
+
+        .logo {
+            padding: 0 0.3125rem;
+
+            a {
+                margin-right: -1.5625rem;
+                height: 3.125rem;
+
+                img {
+                    height: 3.125rem;
+                }
+            }
+        }
+
+        .menu {
+            position: fixed;
+            display: block;
+            background: var(--color-content-bg);
+            top: 3.125rem;
+            right: -50%;
+            bottom: 0;
+            overflow: hidden;
+            width: 50%;
+            transition: right 0.5s;
+            // 抽屉内菜单项居中显示（原来沿用桌面端 text-align:left，且带了桌面端的
+            // margin-left / 圆角胶囊，导致菜单项整体右贴屏幕边、选中态左右不对称）
+            text-align: center;
+            z-index: 100;
+            border-radius: var(--size-radius) 0 0 var(--size-radius);
+            box-shadow: var(--box-shadow-lg);
+
+            a {
+                display: block;
+                // 清掉桌面端遗留的 margin-left: 1.25rem / border-radius: 999px
+                margin: 0;
+                padding: 0 0.75rem;
+                line-height: 2.75rem;
+                border-radius: 0;
+                border-bottom: 0.0625rem solid var(--color-body-line);
+                background: var(--color-content-bg);
+                transition: var(--transition);
+
+                &:hover {
+                    color: var(--color-primary);
+                    background: var(--color-body-block-bg);
+                }
+            }
+        }
+
+        .menu-toggle {
+            display: block;
+            float: right;
+            line-height: 3.125rem;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 3.125rem;
+            cursor: pointer;
+            color: var(--color-primary);
+
+            .close {
+                display: none;
+            }
+
+            .show {
+                display: block;
+            }
+        }
+    }
+
+    .ub-header {
+
+        &.show {
+            .menu-mask {
+                content: '';
+                display: block;
+                background: var(--color-mask);
+                position: fixed;
+                top: 3.125rem;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 99;
+            }
+
+            .menu {
+                right: 0;
+                transition: right 0.3s;
+            }
+
+
+            .menu-toggle {
+                .close {
+                    display: block;
+                }
+
+                .show {
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
+// 组件内局部色板：默认浅色，加 .dark 切到深色"墨"质感。
+// 用局部变量而不是成对复制整套规则，保证两套配色只有一个差异点，
+// 使用方也可以直接覆盖这几个变量换色。
+// 深色"墨"质感色板：低饱和深色 + 主色光晕替代大面积饱和主色铺底。
+// .dark（显式深色）与 .transparent（透明态默认压在深色 hero 上）共用这一套文字色，
+// 与既有 .ub-header / .ub-header-b 的 transparent 行为保持一致。
+.header-a-dark-palette() {
+    --ha-line: var(--color-ink-line);
+    --ha-top-bg: rgba(255, 255, 255, 0.04);
+    --ha-text: var(--color-ink-text);
+    --ha-strong: var(--color-ink-heading);
+    --ha-accent: var(--color-primary-light);
+    --ha-panel-bg: var(--color-ink-bg);
+    --ha-sub-bg: rgba(255, 255, 255, 0.04);
+    --ha-sub-text: var(--color-ink-text);
+    --ha-toggle-bg: var(--color-mask);
+    --ha-toggle-color: #FFFFFF;
+}
+
+.ub-header-a {
+    --ha-bg: var(--color-content-bg);
+    --ha-bg-image: radial-gradient(48rem 16rem at 88% -4rem, var(--color-primary-soft), rgba(255, 255, 255, 0) 72%);
+    --ha-line: var(--color-body-line);
+    --ha-top-bg: var(--color-body-block-bg);
+    --ha-text: var(--color-text);
+    --ha-strong: var(--color-primary);
+    --ha-accent: var(--color-primary);
+    --ha-panel-bg: var(--color-content-bg);
+    --ha-sub-bg: var(--color-body-block-bg);
+    --ha-sub-text: var(--color-text);
+    --ha-toggle-bg: var(--color-primary);
+    --ha-toggle-color: #FFFFFF;
+
+    // 深色"墨"质感导航
+    &.dark {
+        .header-a-dark-palette();
+
+        --ha-bg: var(--color-ink-bg);
+        --ha-bg-image:
+            radial-gradient(48rem 16rem at 88% -4rem, var(--color-primary-glow), rgba(15, 23, 42, 0) 72%),
+            linear-gradient(160deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0) 60%);
+    }
+
+    background-color: var(--ha-bg);
+    background-image: var(--ha-bg-image);
+    background-repeat: no-repeat;
+    color: var(--ha-text);
+
+    .top {
+        height: 1.875rem;
+        line-height: 1.875rem;
+        background: var(--ha-top-bg);
+        border-bottom: 0.0625rem solid var(--ha-line);
+
+        a {
+            display: inline-block;
+            margin: 0 0.625rem;
+            line-height: 1.875rem;
+            color: var(--ha-text);
+
+            &:hover {
+                color: var(--ha-strong);
+            }
+        }
+
+        .right {
+            float: right;
+        }
+
+        .left {
+        }
+    }
+
+    .background {
+        padding: 1.25rem 0;
+        background: no-repeat right;
+        background-size: contain;
+
+        .menu-toggle {
+            display: none;
+        }
+
+        .logo {
+            a {
+                img {
+                    height: 5rem;
+                }
+            }
+        }
+    }
+
+    .menu {
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        border-top: 0.0625rem solid var(--ha-line);
+        box-shadow: none;
+
+        li {
+            display: inline-block;
+            height: 3.125rem;
+            overflow: visible;
+            position: relative;
+
+            a {
+                display: inline-block;
+                line-height: 3.125rem;
+                text-align: center;
+                min-width: 8em;
+                color: var(--ha-text);
+                font-size: var(--font-size-large);
+                margin: 0 0.0625rem;
+                position: relative;
+                transition: var(--transition);
+
+                &:hover {
+                    color: var(--ha-strong);
+                }
+
+                // 激活/悬浮指示条：主色只占极小面积
+                &::after {
+                    content: '';
+                    position: absolute;
+                    left: 50%;
+                    bottom: 0.5rem;
+                    width: 0;
+                    height: 0.125rem;
+                    border-radius: var(--size-radius-full);
+                    background-color: var(--ha-accent);
+                    transform: translateX(-50%);
+                    transition: var(--transition);
+                }
+
+                &:hover::after {
+                    width: 1.5rem;
+                }
+            }
+
+            &.active {
+                a {
+                    color: var(--ha-strong);
+
+                    &::after {
+                        width: 1.5rem;
+                    }
+                }
+            }
+
+            // 桌面端下拉面板浮在正文之上，两套配色下都保持浅色
+            .sub {
+                display: none;
+                position: absolute;
+                background: var(--color-content-bg);
+                border: 0.0625rem solid var(--color-body-line);
+                border-radius: var(--size-radius-sm);
+                box-shadow: var(--box-shadow-pop);
+                padding: 0.25rem;
+                width: 100%;
+                z-index: 100;
+
+                a {
+                    min-width: inherit;
+                    display: block;
+                    color: var(--color-text);
+                    border-radius: var(--size-radius-xs);
+
+                    &::after {
+                        display: none;
+                    }
+
+                    &:hover {
+                        background: var(--color-primary-light-bg);
+                        color: var(--color-primary);
+                    }
+                }
+            }
+
+            &:hover {
+                .sub {
+                    display: block;
+                }
+            }
+        }
+    }
+
+    // 透明模式：只去掉自身底色/光晕与分隔线，文字色切到深色色板
+    // （透明 header 都是压在 hero 上的，系统内 hero 用的都是
+    //  --color-primary-gradient-bg 深色渐变，所以这里统一转白；
+    //  若要压在浅色 hero 上，覆盖上面的 --ha-* 变量即可）
+    &.transparent {
+        .header-a-dark-palette();
+
+        background-color: transparent;
+        background-image: none;
+        box-shadow: none;
+
+        --ha-top-bg: transparent;
+
+        .top {
+            background: transparent;
+            border-bottom-color: transparent;
+        }
+
+        .menu {
+            border-top-color: transparent;
+        }
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-header-a {
+        position: relative;
+        // 必须是 visible：展开的 .menu 是 absolute + top:100%，若继承 overflow:hidden
+        // 会被 header 自己裁掉（点击汉堡按钮后看不到菜单）
+        overflow: visible;
+
+        // 顶栏链接近乎只有装饰意义，手机端默认隐藏，由右上角按钮切换显示。
+        // 关键：改为静态定位（原来是 position:absolute + height:5rem，展开时会整块盖在 logo 上）
+        .top {
+            position: static;
+            height: auto;
+            z-index: auto;
+            display: none;
+            padding: 0.25rem 0;
+            // 手机端两组链接上下堆叠，必须显式左对齐：
+            // 原来 .left / .right 各自带 0.5rem 外边距，堆叠后两行的左边缘差 8px，
+            // 看起来就是"顶部两组链接没有对齐"
+            text-align: left;
+
+            .left, .right {
+                float: none;
+                height: auto;
+
+                a {
+                    margin: 0 0.75rem 0 0;
+                    line-height: 2.25rem;
+                    font-size: var(--font-size-small);
+
+                    // 两行的首个链接都从容器左边缘开始
+                    &:first-child {
+                        margin-left: 0;
+                    }
+                }
+            }
+        }
+
+        .background {
+            position: relative;
+            padding: 0.75rem 0;
+            // 手机端去掉装饰性背景图：它是 holder.js 写入的内联 background-image（500x50 原尺寸），
+            // 在窄屏下会与 logo 重叠成"两块灰底压在一起"
+            background-image: none !important;
+            background-size: auto !important;
+
+            .logo {
+                // 给右上角的汉堡按钮让位
+                max-width: calc(100% - 3.5rem);
+                overflow: hidden;
+
+                a img {
+                    height: 1.75rem;
+                    width: auto;
+                    max-width: 100%;
+                }
+            }
+
+            .menu-toggle {
+                z-index: 101;
+                background: var(--ha-toggle-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 3.25rem;
+                height: auto;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                line-height: 1;
+                font-size: var(--font-size-large);
+                color: var(--ha-toggle-color);
+                border-radius: 0;
+                border-left: 0.0625rem solid var(--ha-line);
+                position: absolute;
+            }
+        }
+
+        .menu {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 100%;
+            background: var(--ha-panel-bg);
+            border-top: 0.0625rem solid var(--ha-line);
+            display: none;
+            z-index: 100;
+
+            li {
+                display: block;
+                height: auto;
+                padding: 0;
+                border-top: 0.0625rem solid var(--ha-line);
+
+                a {
+                    display: block;
+                    text-align: left;
+                    // 清掉桌面端的 min-width: 8em / margin: 0 1px
+                    min-width: 0;
+                    margin: 0;
+                    padding: 0 0.875rem;
+                    line-height: 2.75rem;
+                    font-size: var(--font-size-medium);
+
+                    &::after {
+                        // 手机端隐藏桌面端的下划线指示条
+                        display: none;
+                    }
+                }
+
+                .sub {
+                    display: block;
+                    position: static;
+                    overflow: hidden;
+                    padding: 0;
+                    background: var(--ha-sub-bg);
+                    border: none;
+                    border-radius: 0;
+                    box-shadow: none;
+                    width: auto;
+
+                    a {
+                        border-top: 0.0625rem solid var(--ha-line);
+                        display: block;
+                        width: 33.33%;
+                        float: left;
+                        margin: 0;
+                        padding: 0 0.5rem;
+                        text-align: center;
+                        font-size: var(--font-size);
+                        line-height: 2.5rem;
+                        color: var(--ha-sub-text);
+                    }
+                }
+            }
+        }
+    }
+
+    // 透明模式下展开的内容面板仍需自带底色，否则文字会与页面内容叠在一起
+    .ub-header-a.transparent {
+        // 展开的抽屉/下拉面板是不透明的：--ha-panel-bg / --ha-sub-bg 已随色板切到深色
+        .menu {
+            box-shadow: var(--box-shadow-lg);
+        }
+    }
+}
+
+.ub-header-b-placeholder {
+    height: 3.75rem;
+    overflow: hidden;
+}
+
+.ub-header-b {
+    height: 3.75rem;
+    background-color: var(--color-content-bg);
+    overflow: visible;
+    position: relative;
+    box-shadow: inset 0 -0.0625rem 0 var(--color-body-line);
+    // 注意：不要在这里使用 backdrop-filter / filter / transform，
+    // 它们会让本元素成为 position:fixed 后代的包含块，
+    // 导致小屏抽屉菜单（.nav）高度塌陷、左侧菜单显示不出来。
+
+    &.fixed {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 2000;
+    }
+
+    &.transparent {
+        background: transparent;
+        box-shadow: none;
+
+        .nav {
+            a, .nav-item {
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover, &.active {
+                    color: #fff;
+                }
+            }
+        }
+
+        .menu {
+            & > a, & > .item > a {
+                color: #fff;
+
+                &:hover, &.active {
+                    color: rgba(255, 255, 255, 0.85);
+                }
+            }
+        }
+    }
+
+    &.primary {
+        background: var(--color-primary);
+        box-shadow: none;
+
+        .nav {
+            a {
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover, &.active {
+                    color: #fff;
+                }
+            }
+
+            .sub-nav-item {
+                color: var(--color-text);
+            }
+        }
+
+        .menu {
+            a {
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover, &.active {
+                    color: #fff;
+                }
+            }
+        }
+    }
+
+    .logo {
+        padding: 0 0;
+        float: left;
+        margin-right: 2.5rem;
+
+        a {
+            height: 3.75rem;
+            line-height: 3.75rem;
+            display: block;
+            font-size: 1.25rem;
+            vertical-align: middle;
+
+            img {
+                height: 3.75rem;
+                vertical-align: middle;
+                display: block;
+            }
+        }
+    }
+
+    .nav {
+        padding: 0.625rem 0 0.625rem 0.625rem;
+
+        a, .nav-item {
+            display: inline-block;
+            line-height: 2.5rem;
+            color: var(--color-text);
+            // 点击热区：左右各 0.875rem，条目更易点、视觉更舒展
+            padding: 0 0.875rem;
+            // margin-left: 0.625rem;
+            font-size: 0.875rem;
+            position: relative;
+            border-radius: 999px;
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-primary);
+                background: var(--color-body-block-bg);
+
+                .sub-nav {
+                    display: block;
+                }
+            }
+
+            &.active {
+                color: var(--color-primary);
+                background: var(--color-primary-light-bg);
+            }
+
+            .sub-title {
+                display: inline-block;
+                line-height: 2.5rem;
+                cursor: pointer;
+
+                a {
+                    padding: 0;
+                    margin: 0;
+                }
+            }
+
+            .sub-nav {
+                position: absolute;
+                top: 2.5rem;
+                left: 0;
+                background: var(--color-content-bg);
+                z-index: 99999;
+                border-radius: var(--size-radius);
+                box-shadow: var(--box-shadow-pop);
+                display: none;
+                // 下拉菜单内边距：条目与菜单边缘留白，条目本身成为"内嵌圆角块"，更好点也更好看
+                padding: 0.375rem;
+                min-width: 9rem;
+                // 不要使用 overflow:hidden：三级菜单 .sub-nav-group-nav 是
+                // 定位到 left:100% 的"飞出"层，会被直接裁掉导致多级菜单不显示。
+                // 圆角改由首/末子元素各自承载。
+                > :first-child {
+                    border-top-left-radius: var(--size-radius);
+                    border-top-right-radius: var(--size-radius);
+                }
+
+                > :last-child {
+                    border-bottom-left-radius: var(--size-radius);
+                    border-bottom-right-radius: var(--size-radius);
+                }
+
+                .sub-nav-item {
+                    display: block;
+                    line-height: 2.5rem;
+                    white-space: nowrap;
+                    margin-left: 0;
+                    padding: 0 0.75rem;
+                    border-radius: var(--size-radius-sm);
+                    transition: var(--transition);
+
+                    &:hover {
+                        color: var(--color-primary);
+                        background: var(--color-primary-light-bg);
+                    }
+                }
+
+                .sub-nav-group {
+                    position: relative;
+
+                    &:hover {
+                        .sub-nav-group-nav {
+                            display: block;
+                        }
+                    }
+
+                    .sub-nav-group-item {
+                        display: block;
+                        line-height: 2.5rem;
+                        cursor: pointer;
+                        white-space: nowrap;
+                        padding: 0 0.75rem;
+                        border-radius: var(--size-radius-sm);
+                        transition: var(--transition);
+
+                        &:hover {
+                            color: var(--color-primary);
+                            background: var(--color-primary-light-bg);
+                        }
+                    }
+
+                    .sub-nav-group-nav {
+                        position: absolute;
+                        z-index: 99999;
+                        border-radius: var(--size-radius);
+                        box-shadow: var(--box-shadow-pop);
+                        display: none;
+                        left: 100%;
+                        top: 0px;
+                        background: var(--color-content-bg);
+                        overflow: hidden;
+                        padding: 0.375rem;
+                        min-width: 9rem;
+
+                        .sub-nav-group-nav-item {
+                            white-space: nowrap;
+                            display: block;
+                            line-height: 2.5rem;
+                            cursor: pointer;
+                            transition: var(--transition);
+                            padding: 0 0.75rem;
+                            border-radius: var(--size-radius-sm);
+
+                            &:hover {
+                                color: var(--color-primary);
+                                background: var(--color-primary-light-bg);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        .nav-item {
+            .sub-title {
+                a {
+                    &:after {
+                        content: '';
+                        display: inline-block;
+                        width: 0px;
+                        height: 0px;
+                        border-width: 0.3125rem;
+                        border-style: solid;
+                        border-color: var(--color-muted) transparent transparent transparent;
+                        vertical-align: middle;
+                        transform: translateY(0.125rem);
+                        margin-left: 0.125rem;
+                    }
+                }
+            }
+
+            .sub-nav {
+                .sub-nav-group {
+                    // 有下级菜单的条目：把箭头靠右对齐（原来紧跟在文字后面）
+                    .sub-nav-group-item {
+                        position: relative;
+                        padding-right: 1.75rem;
+
+                        &:after {
+                            content: '';
+                            display: block;
+                            position: absolute;
+                            top: 50%;
+                            right: 0.625rem;
+                            width: 0px;
+                            height: 0px;
+                            border-width: 0.3125rem;
+                            border-style: solid;
+                            border-color: transparent transparent transparent var(--color-muted);
+                            transform: translateY(-50%);
+                            margin-left: 0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 生产端（module/Nav/View/inc/nav.blade.php:16）把 active 打在 .sub-title 里的 <a> 上，
+        // 而 :hover 命中的是外层 .nav-item；两者药丸的盒子并不一致 ——
+        // hover 是整个 .nav-item（左右各 0.875rem 内边距的完整胶囊），
+        // active 只裹住文字本身（padding: 0），两个字的条目会缩成一个"圆球"，观感很奇怪。
+        // 这里用 :has() 把 active 态的背景上提到外层 .nav-item，与 :hover 落在同一个盒子上。
+        .nav-item:has(> .sub-title > a.active) {
+            &,
+            &:hover {
+                background: var(--color-primary-light-bg);
+            }
+
+            // 内层 <a> 不再重复上色，避免出现"两层药丸"
+            > .sub-title > a.active {
+                background: transparent;
+            }
+        }
+
+        .search {
+            float: right;
+            display: inline-block;
+            height: 2.5rem;
+            border-radius: 1.25rem;
+            padding: 0.25rem 0.625rem 0.25rem 0.9375rem;
+            width: 16em;
+            border: 0.0625rem solid var(--color-body-line);
+            transition: var(--transition);
+            background-color: var(--color-content-bg);
+
+            &:hover, &:focus-within {
+                box-shadow: 0 0 0 0.1875rem var(--color-focus-ring);
+                border-color: var(--color-primary);
+            }
+
+            &.has-drop {
+                .box {
+                    input {
+                        padding-left: 2.875rem;
+                    }
+                }
+            }
+
+            .search-select {
+                position: absolute;
+                width: 2rem;
+                top: 0;
+                overflow: visible;
+
+                &.show {
+                    .search-select-drop {
+                        display: block;
+                    }
+                }
+
+                .search-select-box {
+                    height: 1.875rem;
+                    line-height: 1.875rem;
+                    white-space: nowrap;
+                    // 原来用的是 tertiary-light(#D0D5DD) 太浅，看起来"变成灰色不可用"
+                    color: var(--color-text);
+                    cursor: pointer;
+
+                    .iconfont {
+                        margin: 0;
+                        color: var(--color-muted);
+                    }
+                }
+
+
+                .search-select-drop {
+                    position: absolute;
+                    background: var(--color-content-bg);
+                    box-shadow: var(--box-shadow-pop);
+                    border-radius: var(--size-radius);
+                    left: -0.625rem;
+                    top: 1.875rem;
+                    display: none;
+                    z-index: 1000;
+                    overflow: hidden;
+
+                    .search-select-item {
+                        display: block;
+                        color: var(--color-text);
+                        white-space: nowrap;
+                        padding: 0;
+                        margin-left: 0;
+                        width: 3.125rem;
+                        text-align: center;
+                        line-height: 1.875rem;
+                        transition: var(--transition);
+
+                        &:hover {
+                            color: var(--color-primary);
+                            background: var(--color-primary-light-bg);
+                        }
+                    }
+                }
+            }
+
+            .box {
+                vertical-align: middle;
+                position: relative;
+
+                input {
+                    height: 1.875rem;
+                    display: block;
+                    width: 100%;
+                    padding: 0 1.875rem 0 0;
+                    border: none;
+                    background: none;
+                    color: var(--color-text);
+                    // 搜索框的焦点态由外层 .search 统一提供（边框 + 光环），
+                    // 这里必须清掉 input 自身的 focus 边框/光环，否则会出现双层焦点框。
+                    outline: 0;
+                    box-shadow: none;
+                    border-radius: 0;
+
+                    &:focus {
+                        outline: 0;
+                        box-shadow: none;
+                        border-radius: 0;
+                    }
+                }
+
+                button {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    height: 1.875rem;
+                    width: 1.875rem;
+                    border: none;
+                    outline: none;
+                    font-size: 1.125rem;
+                    color: var(--color-tertiary-light);
+                    cursor: pointer;
+                    background: transparent;
+                    transition: var(--transition);
+
+                    &:hover {
+                        color: var(--color-primary);
+                    }
+                }
+            }
+        }
+    }
+
+    .menu {
+        float: right;
+        padding: 0.625rem 0;
+
+        a, .item {
+            display: inline-block;
+            line-height: 2.5rem;
+            color: var(--color-text);
+            // padding: 0 0.625rem;
+            margin-left: 0.625rem;
+            font-size: 0.875rem;
+            position: relative;
+            height: 2.5rem;
+
+            &:hover {
+                .sub-title {
+                    color: var(--color-primary);
+                }
+
+                .sub-nav {
+                    display: block;
+                }
+            }
+
+
+            .sub-nav {
+                position: absolute;
+                background: var(--color-content-bg);
+                z-index: 99999;
+                border-radius: var(--size-radius);
+                box-shadow: var(--box-shadow-pop);
+                display: none;
+                right: 0px;
+                // 同 .nav 内的 .sub-nav：不要用 overflow:hidden，否则会裁掉
+                // 定位在外部的子菜单；圆角改由首/末子元素承载。
+                > :first-child {
+                    border-top-left-radius: var(--size-radius);
+                    border-top-right-radius: var(--size-radius);
+                }
+
+                > :last-child {
+                    border-bottom-left-radius: var(--size-radius);
+                    border-bottom-right-radius: var(--size-radius);
+                }
+
+                .sub-nav-item {
+                    display: block;
+                    line-height: 2.5rem;
+                    white-space: nowrap;
+                    margin-left: 0;
+                    padding: 0 0.625rem;
+                    transition: var(--transition);
+
+                    &:hover {
+                        color: var(--color-primary);
+                        background: var(--color-primary-light-bg);
+                    }
+                }
+            }
+
+                &.menu-btn {
+                    border-radius: 999px;
+                    height: 1.875rem;
+                    line-height: 1.875rem;
+                    padding: 0 0.625rem;
+                    color: #fff;
+                    transition: var(--transition);
+
+                .icon, .iconfont {
+                    line-height: 1.875rem;
+                }
+            }
+
+            .icon, .iconfont {
+                line-height: 2.5rem;
+                vertical-align: top;
+                width: 1rem;
+                display: inline-block;
+                text-align: center;
+            }
+
+            .badge {
+                position: absolute;
+                top: 0;
+                right: -0.375rem;
+                background: var(--color-danger);
+                color: #fff;
+                height: 1rem;
+                line-height: 1rem;
+                font-size: 0.75rem;
+                border-radius: 0.5rem;
+                min-width: 1rem;
+                text-align: center;
+                padding: 0 0.25rem;
+
+                &.hide {
+                    display: none;
+                }
+            }
+
+            &:hover {
+                color: var(--color-primary);
+            }
+
+            .active {
+                color: #fff;
+            }
+        }
+    }
+
+    .nav-toggle {
+        display: none;
+    }
+}
+
+// 桌面端：header-b 由 float 布局改为 flex 三段式（logo / nav / menu），
+// 导航区单行不换行；放不下的条目由 base.js 折叠进末尾的"更多"下拉（.nav-more）。
+// 只在 >=50rem 生效，移动端（<=50rem）的 fixed 抽屉布局保持不变。
+@media screen and (min-width: 50rem) {
+    .ub-header-b {
+        > .ub-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            float: none;
+            flex: 0 0 auto;
+            order: 1;
+        }
+
+        .nav {
+            float: none;
+            flex: 1 1 auto;
+            min-width: 0;
+            order: 2;
+            display: flex;
+            align-items: center;
+            // 条目永远单行：溢出的部分交给 JS 折叠，绝不换行压住页面内容
+            flex-wrap: nowrap;
+        }
+
+        // 导航条目保持原始宽度（不参与收缩）
+        .nav > a,
+        .nav > .nav-item {
+            flex: 0 0 auto;
+        }
+
+        // 搜索框靠右：DOM 中排在最前，用 order 移到末尾，再用 auto 外边距推到右侧
+        .nav > .search {
+            float: none;
+            flex: 0 0 auto;
+            order: 10;
+            margin-left: auto;
+        }
+
+        .menu {
+            float: none;
+            flex: 0 0 auto;
+            order: 3;
+        }
+
+        // 桌面端隐藏移动端专用的遮罩与汉堡按钮
+        .nav-mask,
+        .nav-toggle {
+            display: none;
+        }
+
+        // 溢出折叠入口（由 base.js 生成）
+        .nav-more {
+            order: 9;
+
+            // "更多"下拉贴着右边缘向左展开
+            > .sub-nav {
+                left: auto;
+                right: 0;
+            }
+
+            // 被折叠的二级菜单项：在"更多"下拉里渲染成"分组 + 左向飞出层"
+            > .sub-nav > .nav-item {
+                display: block;
+                position: relative;
+                white-space: nowrap;
+                line-height: 2.5rem;
+                padding: 0 0.75rem;
+                border-radius: var(--size-radius-sm);
+                transition: var(--transition);
+
+                &:hover {
+                    color: var(--color-primary);
+                    background: var(--color-primary-light-bg);
+                }
+
+                > .sub-title {
+                    display: block;
+                    line-height: 2.5rem;
+
+                    a {
+                        display: block;
+                        padding: 0;
+                        margin: 0;
+                        color: inherit;
+                    }
+                }
+
+                // 飞出层改为向左展开，避免超出屏幕右侧。
+                // 必须显式 display:none：外层 .nav-more:hover 会命中
+                // `.nav .nav-item:hover .sub-nav`（所有后代），不覆盖的话
+                // 悬停"更多"就会把这里的二级飞出层一起展开。
+                > .sub-nav {
+                    display: none;
+                    left: auto;
+                    right: 100%;
+                    top: 0;
+                }
+
+                &:hover > .sub-nav {
+                    display: block;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (min-width: 50rem) {
+
+    [data-header-sticky-disable] {
+        .ub-header-b, .ub-header {
+            top: -3.75rem !important;
+        }
+    }
+
+    .ub-header-b, .ub-header {
+        position: sticky;
+        transition: top 0.3s;
+        z-index: 2000;
+        top: -3.75rem;
+    }
+
+    html.body-scroll-far {
+        .ub-header-b, .ub-header {
+            top: 0px;
+            box-shadow: @header-box-shadow;
+
+            &.transparent {
+                background-color: var(--color-content-bg);
+
+                .nav {
+                    a, .nav-item {
+                        color: var(--color-text);
+
+                        &:hover, &.active {
+                            color: var(--color-primary);
+                        }
+                    }
+                }
+
+                .menu {
+                    & > a, & > .item > a {
+                        color: var(--color-text);
+
+                        &:hover, &.active {
+                            color: var(--color-primary);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-header-b {
+        text-align: left;
+        height: 3.125rem;
+
+        &.transparent {
+            &.show {
+                .nav {
+                    a {
+                        color: var(--color-text);
+                    }
+                }
+            }
+
+            .nav-toggle {
+                color: #FFF;
+            }
+        }
+
+        .logo {
+            display: inline-block;
+            margin-left: 2.5rem;
+
+            a {
+                height: 3.125rem;
+                line-height: 3.125rem;
+                display: inline-block;
+
+                img {
+                    height: 2.5rem;
+                    display: inline-block;
+                }
+            }
+        }
+
+        &.show {
+            .nav-mask {
+                content: '';
+                display: block;
+                background: var(--color-mask);
+                position: fixed;
+                top: 3.125rem;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 1000;
+            }
+
+            .nav {
+                transform: translateX(100%);
+                position: fixed;
+            }
+
+            .nav-toggle {
+                .close {
+                    display: block;
+                }
+
+                .show {
+                    display: none;
+                }
+            }
+        }
+
+        .menu {
+            position: absolute;
+            right: 0;
+            top: 0;
+            padding: 0.3125rem 0;
+
+            .item {
+                margin-left: 0;
+            }
+
+            a {
+                display: inline-block;
+                padding: 0 0.375rem 0 0;
+                background: transparent;
+                line-height: 2.5rem;
+                margin-left: 0;
+            }
+        }
+
+        .nav-toggle {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            line-height: 3.125rem;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 3.125rem;
+            cursor: pointer;
+            color: var(--color-primary);
+
+            .close {
+                display: none;
+            }
+
+            .show {
+                display: block;
+            }
+        }
+
+        &.primary {
+            .nav-toggle {
+                color: #FFF;
+            }
+        }
+
+        .nav {
+            position: absolute;
+            display: block;
+            background: var(--color-content-bg);
+            top: 3.125rem;
+            left: -60%;
+            bottom: 0;
+            overflow: hidden;
+            width: 60%;
+            transition: right 0.5s;
+            text-align: left;
+            z-index: 100;
+            overflow-y: auto;
+            // 左右对称留白：让抽屉里的条目成为"内嵌圆角块"，而不是整行铺满的色块
+            padding: 0 0.625rem;
+            transition: transform 0.3s;
+            transform: translateX(0);
+            z-index: 1001;
+            border-radius: 0 var(--size-radius) var(--size-radius) 0;
+            box-shadow: var(--box-shadow-lg);
+
+            .search {
+                display: block;
+                float: none;
+                margin: 0 auto 0.625rem auto;
+                width: auto;
+            }
+
+            a, .nav-item {
+                display: block;
+                background: var(--color-content-bg);
+                border-radius: var(--size-radius-sm);
+                transition: var(--transition);
+
+                // 移动端抽屉里的条目是整行 block，触屏上 :hover 会"粘住"，
+                // 导致整行出现大块灰/深色底，非常难看；这里把 hover 底色还原为透明。
+                // 注意：桌面端的 :hover 特异性相同但位置更靠前，所以此处能覆盖它。
+                // 用 :not(.active) 避免把"当前项"的高亮也一起抹掉。
+                &:hover:not(.active) {
+                    background: transparent;
+                }
+
+                // 触屏按下时的瞬时反馈（不残留）
+                &:active {
+                    background: var(--color-primary-light-bg);
+                }
+
+                .sub-nav {
+                    display: block;
+                    position: static;
+                    box-shadow: none;
+                    padding: 0;
+
+                    .sub-nav-item {
+                        &:last-child {
+                            border-bottom: none;
+                        }
+
+                        // 同上：抽屉内不做 hover 底色，避免整行色块
+                        &:hover {
+                            background: transparent;
+                        }
+                    }
+
+                    .sub-nav-group {
+                        .sub-nav-group-nav {
+                            display: block;
+                            position: static;
+                            box-shadow: none;
+                            padding: 0.375rem 0 0.375rem 0.625rem;
+                            min-width: 0;
+                        }
+
+                        .sub-nav-group-item {
+                            &:after {
+                                border-color: var(--color-muted) transparent transparent transparent;
+                                transform: translateY(-0.125rem);
+                            }
+
+                            &:hover {
+                                background: transparent;
+                            }
+                        }
+
+                        .sub-nav-group-nav-item {
+                            &:hover {
+                                background: transparent;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        &.primary {
+            .nav {
+                a {
+                    color: var(--color-text);
+
+                    &.active {
+                        color: var(--color-primary);
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+
+.ub-header-c-placeholder {
+    height: 3.75rem;
+    overflow: hidden;
+}
+
+.ub-header-c {
+    height: 3.75rem;
+    background: var(--color-content-bg);
+    overflow: hidden;
+    position: fixed;
+    text-align: center;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 0.0625rem 0 var(--color-body-line), 0 0.5rem 1.5rem -1rem var(--color-mask);
+
+    // 透明模式：去掉底色、底部渐隐线与极光光晕，只留内容浮在 hero 之上。
+    // 透明 header 都压在深色 hero 上（系统内 hero 用 --color-primary-gradient-bg），
+    // 所以导航图标/登录按钮/搜索框一并转成浅色，避免深底上出现深字。
+    &.transparent {
+        background: transparent;
+        box-shadow: none;
+
+        &::before, &::after {
+            display: none;
+        }
+
+        .menu {
+            .item-icon {
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover {
+                    color: #FFF;
+                    background: rgba(255, 255, 255, 0.16);
+                }
+            }
+
+            .item {
+                border-color: rgba(255, 255, 255, 0.45);
+                color: #FFF;
+
+                &:hover {
+                    background: #FFF;
+                    border-color: #FFF;
+                    color: var(--color-primary);
+                }
+            }
+        }
+
+        .search .box {
+            background-color: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.24);
+
+            &:hover, &:focus-within {
+                background-color: rgba(255, 255, 255, 0.22);
+                border-color: rgba(255, 255, 255, 0.4);
+                box-shadow: none;
+            }
+
+            .input {
+                color: #FFF;
+            }
+
+            .submit {
+                background: transparent;
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover {
+                    background: transparent;
+                    color: #FFF;
+                }
+            }
+        }
+    }
+
+    // 顶部特效：主色极光光晕（纯装饰层，pointer-events 关闭）
+    // 注意：这里只能用伪元素 + 渐变，不能使用 transform / filter / backdrop-filter，
+    // 否则会劫持内部 .search（小屏下为 position:fixed）的包含块。
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background:
+            radial-gradient(30rem 8rem at 12% -4rem, var(--color-primary-glow), transparent 68%),
+            radial-gradient(24rem 7rem at 88% -4rem, var(--color-primary-soft), transparent 70%);
+        pointer-events: none;
+    }
+
+    // 底部渐隐分隔线：比生硬的 1px 实线更精致
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 0.0625rem;
+        background: linear-gradient(90deg,
+            transparent,
+            var(--color-body-line) 16%,
+            var(--color-body-line) 84%,
+            transparent);
+        pointer-events: none;
+    }
+
+    // 保证内容层位于装饰层之上。
+    // 注意：只能给 .search 内部真正可见的 .box 加层级，
+    // 不能给 .search 本体加 position/z-index —— .search 是通栏 block 且 DOM 在 .menu 之后，
+    // 一旦它成为定位元素就会盖住右上角的导航/登录按钮，导致"点了没反应"。
+    .search {
+        .box {
+            z-index: 1;
+        }
+    }
+
+    .logo, .menu, .menu-toggle, .menu-mask, .search-toggle, .search-mask {
+        z-index: 1;
+    }
+
+    // 可点击区域统一手型光标（.search .box .submit 在自身规则里已声明 cursor）
+    .menu .item-icon, .menu .item, .logo .logo-link,
+    .menu-toggle, .search-toggle, .menu-mask, .search-mask {
+        cursor: pointer;
+    }
+
+    .logo {
+        position: absolute;
+        top: 0;
+        left: 3.75rem;
+
+        .logo-link {
+            line-height: 2.5rem;
+            display: inline-block;
+            padding: 0.625rem 0;
+            font-size: 1.25rem;
+            vertical-align: middle;
+
+            .logo-image {
+                height: 2.5rem;
+                vertical-align: middle;
+                display: inline-block;
+            }
+        }
+    }
+
+    .search {
+        .box {
+            vertical-align: middle;
+            margin-top: 0.625rem;
+            display: inline-block;
+            height: 2.5rem;
+            border-radius: 1.25rem;
+            padding: 0.25rem 0.625rem 0.25rem 0.9375rem;
+            width: 30%;
+            max-width: 30em;
+            border: 1px solid var(--color-body-line);
+            position: relative;
+            background-color: var(--color-body-bg);
+            transition: var(--transition);
+
+            // 焦点态统一由外层 .box 提供（input 自身的焦点框已清除）
+            &:hover, &:focus-within {
+                border-color: var(--color-primary);
+                background-color: var(--color-content-bg);
+                box-shadow: 0 0 0 0.1875rem var(--color-focus-ring);
+            }
+
+            .input {
+                height: 1.875rem;
+                display: block;
+                width: 100%;
+                padding: 0 1.875rem 0 0;
+                border: none;
+                background: none;
+                color: var(--color-text);
+                // 焦点态由外层 .box 提供，避免 input 自身再画一层焦点框
+                outline: 0;
+                box-shadow: none;
+                border-radius: 0;
+
+                &:focus {
+                    outline: 0;
+                    box-shadow: none;
+                    border-radius: 0;
+                }
+            }
+
+            .submit {
+                position: absolute;
+                right: 0px;
+                top: 0px;
+                height: 2.375rem;
+                border: none;
+                outline: none;
+                font-size: 0.875rem;
+                color: var(--color-text);
+                cursor: pointer;
+                background: var(--color-body-bg);
+                border-radius: 0 1.25rem 1.25rem 0;
+                padding: 0 0.75rem 0 0.625rem;
+
+                &:hover {
+                    background: var(--color-body-bg);
+                    color: var(--color-primary);
+                }
+            }
+        }
+    }
+
+    .menu {
+        position: absolute;
+        right: 0;
+        top: 0;
+        padding: 0.75rem 1.25rem 0 0;
+
+        .item {
+            vertical-align: middle;
+            display: inline-block;
+            line-height: 2rem;
+            height: 2rem;
+            padding: 0 0.75rem;
+            margin-left: 0.625rem;
+            font-size: 0.875rem;
+            border-radius: var(--size-radius-xs);
+            border: solid 0.0625rem var(--color-primary);
+            color: var(--color-primary);
+            cursor: pointer;
+            transition: var(--transition);
+
+            // 登录按钮：hover 填充主色 + 轻微上浮，按压回落
+            &:hover {
+                background: var(--color-primary);
+                border-color: var(--color-primary);
+                color: #FFF;
+                transform: translateY(-0.0625rem);
+                box-shadow: 0 0.5rem 1rem -0.5rem var(--color-primary-glow);
+            }
+
+            &:active {
+                transform: translateY(0) scale(0.97);
+            }
+        }
+
+        .item-icon {
+            vertical-align: middle;
+            color: var(--color-text);
+            display: inline-block;
+            padding: 0 0.625rem;
+            margin-top: -0.25rem;
+            border-radius: var(--size-radius-xs);
+            transition: var(--transition);
+
+            .icon {
+                font-size: 1.25rem;
+                line-height: 1.75rem;
+                transition: var(--transition);
+            }
+
+            .text {
+                font-size: var(--font-size-small);
+            }
+
+            // 导航图标：hover 时淡主色底 + 图标轻微上浮
+            &:hover {
+                color: var(--color-primary);
+                background: var(--color-primary-light-bg);
+
+                .icon {
+                    transform: translateY(-0.125rem);
+                }
+            }
+
+            &:active {
+                transform: scale(0.96);
+            }
+        }
+    }
+
+    .menu-toggle, .menu-mask, .search-toggle {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-header-c {
+        padding: 0 3.75rem;
+        text-align: center;
+
+        &.show {
+            .menu-mask {
+                content: '';
+                display: block;
+                background: var(--color-mask);
+                position: fixed;
+                top: 3.75rem;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 1000;
+            }
+
+            .menu {
+                z-index: 1001;
+                right: 0;
+                transition: right 0.3s;
+            }
+
+            .menu-toggle {
+                .close {
+                    display: block;
+                }
+
+                .show {
+                    display: none;
+                }
+            }
+        }
+
+        &.show-search {
+            .search-mask {
+                content: '';
+                display: block;
+                background: var(--color-mask);
+                position: fixed;
+                top: 3.75rem;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 1000;
+            }
+
+            .search {
+                z-index: 1001;
+                display: block;
+            }
+
+            .search-toggle {
+                .close {
+                    display: block;
+                }
+
+                .show {
+                    display: none;
+                }
+            }
+        }
+
+        .logo {
+            position: static;
+        }
+
+        .search-toggle {
+            display: block;
+            position: absolute;
+            left: 0;
+            top: 0;
+            line-height: 3.75rem;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 3.75rem;
+            cursor: pointer;
+            color: var(--color-primary);
+
+            .close {
+                display: none;
+            }
+
+            .show {
+                display: block;
+            }
+        }
+
+        .search {
+            display: none;
+            padding: 0 0.625rem 0.625rem 0.625rem;
+            background: var(--color-content-bg);
+            position: fixed;
+            top: 3.75rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+
+            .box {
+                width: 80%;
+            }
+        }
+
+        .menu-toggle {
+            display: block;
+            position: absolute;
+            right: 0;
+            top: 0;
+            line-height: 3.75rem;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 3.75rem;
+            cursor: pointer;
+            color: var(--color-primary);
+
+            .close {
+                display: none;
+            }
+
+            .show {
+                display: block;
+            }
+        }
+
+        .menu {
+            position: fixed;
+            right: -10rem;
+            top: 3.75rem;
+            background: var(--color-content-bg);
+            padding: 0.625rem;
+            border-radius: var(--size-radius);
+            box-shadow: var(--box-shadow-lg);
+
+
+            .item-icon {
+                width: 7.5rem;
+                font-size: 1.25rem;
+                padding: 0;
+                display: block;
+                line-height: 2.5rem;
+                border-bottom: 0.0625rem solid var(--color-body-line);
+                border-radius: var(--size-radius-sm);
+
+                .icon {
+                    display: inline-block;
+                    font-size: 1.25rem;
+                }
+
+                .text {
+                    display: inline-block;
+                    font-size: var(--font-size);
+                }
+
+                &:hover, &:active {
+                    color: var(--color-primary);
+                    background: var(--color-primary-light-bg);
+                }
+            }
+
+            .item {
+                display: block;
+                margin-top: 0.625rem;
+                margin-left: 0;
+                text-align: center;
+                transition: var(--transition);
+
+                &:active {
+                    transform: scale(0.97);
+                }
+            }
+        }
+    }
+}
+
+
+.ub-header-d {
+    background: var(--color-content-bg);
+
+    // 透明模式：去掉底色与主栏下方的分隔条，直接压在 hero 上，
+    // 顶栏链接与主导航文字转白（hero 用深色渐变）
+    &.transparent {
+        background: transparent;
+
+        .top {
+            background-color: transparent;
+
+            .right .item {
+                color: rgba(255, 255, 255, 0.85);
+
+                &:hover {
+                    color: #FFF;
+                }
+            }
+        }
+
+        .main {
+            border-bottom-color: transparent;
+
+            .menu .item {
+                color: #FFF;
+
+                &:hover, &.active {
+                    border-bottom-color: #FFF;
+                }
+            }
+        }
+    }
+
+    .top {
+        background-color: var(--color-body-block-bg);
+        height: 2.1875rem;
+
+        .right {
+            text-align: right;
+
+            .item {
+                display: inline-block;
+                line-height: 2.1875rem;
+                color: var(--color-text);
+                padding: 0 1.25rem;
+                transition: var(--transition);
+
+                &:hover {
+                    color: var(--color-primary);
+                }
+            }
+        }
+    }
+
+    .main {
+        height: 5.875rem;
+        border-bottom: 0.3125rem solid var(--color-body-line);
+
+        .menu {
+            float: right;
+
+            .item {
+                color: var(--color-primary);
+                font-size: var(--font-size-large);
+                line-height: 5.25rem;
+                padding: 0 1.25rem;
+                display: inline-block;
+                border-bottom: 0.3125rem solid transparent;
+
+                transition: var(--transition);
+
+                &:hover, &.active {
+                    border-bottom: 0.3125rem solid var(--color-primary);
+                }
+            }
+        }
+
+        .logo {
+            height: 5.875rem;
+
+            a {
+                display: inline-block;
+                margin-top: 1.0625rem;
+
+                img {
+                    height: 3.75rem;
+                }
+            }
+        }
+    }
+
+    .menu-toggle {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-header-d {
+        position: relative;
+        overflow: hidden;
+
+        &.show-menu {
+            .menu-toggle {
+                transform: rotate(90deg);
+            }
+
+            .main {
+                .menu {
+                    right: 0%;
+                }
+            }
+        }
+
+        .menu-toggle {
+            display: block;
+            position: absolute;
+            right: 0;
+            top: 2.1875rem;
+            line-height: 3.375rem;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 3.375rem;
+            cursor: pointer;
+            color: var(--color-primary);
+            transition: all 0.5s;
+        }
+
+        .main {
+            height: 3.375rem;
+
+            .menu {
+                position: fixed;
+                // 面板贴住标题栏下沿（原来是 5.25rem，比手机端 header 总高 5.5625rem 小，
+                // 展开时会压住标题栏底部的分隔条）
+                top: 5.5625rem;
+                // 从右侧滑出：-100% 保证窄屏下也完全在屏幕外
+                right: -100%;
+                // 原来固定 30% 宽 + 每项 45px 高（含 5px 下边框）+ 16px 圆角，
+                // 只有三两个字的菜单却是一块又窄又厚的浮卡；改为按内容收窄的抽屉
+                width: auto;
+                min-width: 6.5rem;
+                background: var(--color-content-bg);
+                box-shadow: var(--box-shadow-lg);
+                border-radius: var(--size-radius-sm);
+                overflow: hidden;
+                transition: right 0.35s var(--ease-out);
+                z-index: 2000;
+
+                .item {
+                    display: block;
+                    font-size: var(--font-size);
+                    line-height: 2.25rem;
+                    padding: 0 0.875rem;
+                    text-align: left;
+                    color: var(--color-text);
+                    // 桌面端用来画底部粗指示线的 5px 透明边框在这里只会把行撑高
+                    border-bottom: 0;
+                    transition: var(--transition);
+
+                    &:hover, &.active {
+                        color: var(--color-primary);
+                        background: var(--color-primary-light-bg);
+                    }
+                }
+            }
+
+            .logo {
+                height: 3.375rem;
+
+                a {
+                    margin-top: 0.375rem;
+
+                    img {
+                        height: 2.5rem;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.ub-header-mobile {
+
+    &.no-shadow {
+        .header-container {
+            box-shadow: none;
+        }
+    }
+
+    // 透明模式：状态栏与标题栏都去掉底色与投影，标题/返回键/操作图标转白，
+    // 用于沉浸式页面（透明态默认压在深色内容或 hero 上）
+    &.transparent {
+        .header-status, .header-container {
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .header-container .body {
+            color: #FFF;
+
+            .back, .title, .action, .action .item, .action .iconfont {
+                color: #FFF;
+            }
+        }
+    }
+
+    .header-status {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+        background: var(--color-content-bg);
+    }
+
+    .header-container {
+        position: fixed;
+        left: 0;
+        right: 0;
+        height: 50px;
+        z-index: 500;
+        box-shadow: 0 1px 1px var(--color-body-line);
+        background: var(--color-content-bg);
+
+        .body {
+            display: flex;
+            height: 50px;
+            line-height: 50px;
+
+            .left-wrap, .right-wrap {
+                flex-shrink: 0;
+            }
+
+            // 无返回键时，左侧补出与右侧操作区等宽的空间，保证标题相对整条导航栏居中
+            // （有 .back 时由 .back 自身占位，无需再补）
+            &:not(:has(.back)) .left-wrap {
+                width: 50px;
+            }
+
+            // 标题默认居中，与移动端 c-page-header 组件的 titleAlign 默认值保持一致
+            .title {
+                text-align: center;
+            }
+
+            &.has-back {
+                .action {
+                    min-width: 50px;
+                }
+            }
+
+            .back {
+                font-size: 32px;
+                width: 50px;
+                line-height: 50px;
+                text-align: center;
+                min-width: 50px;
+                flex-shrink: 0;
+                // 返回键可点击 → 手型光标
+                cursor: pointer;
+            }
+
+            .title {
+                font-size: 20px;
+                line-height: 50px;
+                height: 50px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                flex-grow: 1;
+                // flex 项默认 min-width:auto 会阻止收缩，导致长标题撑破布局而不省略号截断
+                min-width: 0;
+                padding: 0 0.3125rem;
+            }
+
+            .action {
+                text-align: center;
+                flex-shrink: 0;
+
+                .item {
+                    line-height: 50px;
+                    width: 50px;
+                    text-align: center;
+                    display: block;
+                    // 右侧操作按钮可点击 → 手型光标
+                    cursor: pointer;
+                }
+
+                .iconfont {
+                    font-size: var(--font-size-large);
+                }
+            }
+        }
+    }
+
+    .header-container-placeholder {
+        height: 50px;
+        width: 100%;
+        clear: both;
+    }
+}
+
+@media screen and (min-width: 50rem) {
+    .ub-header-mobile {
+        .header-status, .header-container {
+            //width: 37.5rem;
+            //left: 50%;
+            //margin-left: -18.75rem;
+        }
+
+        .header-container {
+            box-shadow: @header-box-shadow;
+        }
+    }
+}

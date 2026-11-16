@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Brick UI Preview</title>
+    <link rel="stylesheet" href="https://ms-cdn.modstart.com/asset/vendor/iconfont/iconfont.css">
+    <link rel="stylesheet" href="https://ms-cdn.modstart.com/asset/theme/default/base.css">
+    <link rel="stylesheet/less" type="text/css" href="./base/style.less"/>
+    <link rel="stylesheet/less" type="text/css" href="./bricks/component/panel/panel.less"/>
+    <script src="js/jquery.js"></script>
+    <script src="https://ms-cdn.modstart.com/asset/common/base.js"></script>
+    <script src="https://ms-cdn.modstart.com/asset/vendor/echarts/echarts.all.js"></script>
+    <style type="text/css">
+        #page-container {
+        }
+
+        .ub-container {
+            max-width: 1000px !important;
+        }
+
+        .block-breaker {
+            height: 0;
+            margin: 1.25rem 0;
+            border: none;
+            border-top: 0.0625rem dashed var(--color-body-line);
+        }
+
+        .block-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--color-content-bg);
+            margin: 0.625rem 0;
+            line-height: 2.75rem;
+            color: var(--color-text);
+            font-weight: 500;
+            text-align: center;
+            border-radius: var(--size-radius);
+            border: 0.0625rem solid var(--color-body-line);
+            box-shadow: var(--box-shadow-xs);
+            transition: var(--transition);
+        }
+
+        .block-selector:hover {
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+            box-shadow: var(--box-shadow);
+        }
+
+        .block-placeholder {
+            background: var(--color-body-block-bg);
+            border-radius: var(--size-radius);
+            margin: 0.625rem 0;
+            padding: 0.875rem 1rem;
+            color: var(--color-muted);
+        }
+    </style>
+</head>
+<body>
+<div id="page-container">
+</div>
+<script>
+    less = {
+        env: 'development',
+        poll: 3000,
+        logLevel: 2
+    };
+</script>
+<script src="js/less.js"></script>
+<script src="js/holder.js"></script>
+<script src="js/baiduTemplate.js"></script>
+<script src="js/randomEn.js"></script>
+<script>
+    $(function () {
+        // Resolve the preview target: the `url` query param wins, otherwise fall
+        // back to the last page kept in localStorage (shared with index.html) so
+        // reloading a preview without the param never lands on a blank frame.
+        var page = (function () {
+            var STORAGE_KEY = 'brick-ui-last-page';
+            var search = window.location.search || '';
+            var value = '';
+            if (search.indexOf('?url=') === 0) {
+                value = search.substring(5);
+            } else if (search.charAt(0) === '?') {
+                value = search.substring(1);
+            }
+            value = (value || '').replace(/^\s+|\s+$/g, '');
+            if (!value) {
+                try {
+                    value = window.localStorage.getItem(STORAGE_KEY) || '';
+                } catch (e) {
+                    value = '';
+                }
+            }
+            if (value && window.self === window.top) {
+                // Only persist when opened standalone; embedded frames (console
+                // iframe / nested variant frames) must not clobber the value.
+                try {
+                    window.localStorage.setItem(STORAGE_KEY, value);
+                } catch (e) {
+                }
+            }
+            return value;
+        })();
+        if (!page) {
+            page = 'component/header/header-default';
+        }
+        baidu.template.LEFT_DELIMITER = '<?'
+        baidu.template.RIGHT_DELIMITER = '?>'
+        const randomZH = function (len) {
+            let words = []
+            while (words.length < len) {
+                eval('words.push("\\u' + (Math.round(Math.random() * 20901) + 19968).toString(16) + '");')
+            }
+            return words.join('')
+        }
+        const randomNum = function (min, max) {
+            min = parseInt(min)
+            max = parseInt(max)
+            return parseInt(Math.random() * (max - min) + min)
+        }
+        window.randomNum = randomNum
+        const randomEn = function (len) {
+            let words = []
+            while (words.join(' ').length < len) {
+                let word = randomEnWord()
+                words.push(word.substr(0, 1).toUpperCase() + word.substr(1))
+            }
+            return words.join(' ')
+        }
+        const processHtml = function (html, param) {
+            param = param || {
+                seq: 0
+            }
+            html = html.replace(/\{ZH,(\d+),(\d+)\}/g, function (v, s1, s2) {
+                return randomZH(randomNum(s1, s2))
+            })
+            html = html.replace(/\{EN,(\d+),(\d+)\}/g, function (v, s1, s2) {
+                return randomEn(randomNum(s1, s2))
+            })
+            html = html.replace(/\{NUM,(\d+),(\d+)\}/g, function (v, s1, s2) {
+                return randomNum(s1, s2)
+            })
+            html = html.replace(/\{SEQ\}/g, function (v, s1, s2) {
+                return param.seq
+            })
+            return html
+        }
+        let pageHtmlMd5 = null
+        const setPageHtml = function (html) {
+            pageHtmlMd5 = MS.util.md5(html)
+            console.log('setPageHtml', 'html.md5=' + pageHtmlMd5)
+            let scripts = []
+            html = html.replace(/<script>[\s\S]*?<\/script>/g, function (o) {
+                // console.log('html script', o)
+                scripts.push(o)
+                return ''
+            })
+            let $html = $('<div>' + html + '</div>')
+            let times = 0;
+            while (times++ < 999 && $html.find('[data-repeat]:first').length > 0) {
+                $html.find('[data-repeat]:last').each(function (i, o) {
+                    let itemHtml = o.outerHTML
+                    // console.log('DataRepeatProcess', itemHtml)
+                    let $item = $(itemHtml)
+                    let repeatCount = parseInt($item.attr('data-repeat'))
+                    $item.removeAttr('data-repeat')
+                    itemHtml = $item[0].outerHTML
+                    let $items = $('<div></div>');
+                    for (let i = 0; i < repeatCount; i++) {
+                        $items.append(processHtml(itemHtml, {
+                            seq: i + 1
+                        }))
+                    }
+                    $(o).replaceWith($items.html())
+                })
+            }
+            $('#page-container').html(processHtml($html.html())).append(scripts.join(''));
+            less.registerStylesheets();
+            less.refresh().then(function () {
+                $('[data-src],[data-background-url]')
+                    .filter('[data-holder-rendered!=true]')
+                    .each(function (i, o) {
+                        switch (o.tagName) {
+                            case 'IMG':
+                            case 'A':
+                            case 'DIV':
+                            case 'SPAN':
+                                Holder.run({
+                                    mode: 'background',
+                                    theme: 'gray',
+                                    domain: "placeholder",
+                                    images: o,
+                                    size: 12,
+                                    font: "Monaco",
+                                    fontweight: "normal",
+                                    outline: 'yes',
+                                    bgnodes: [o],
+                                    noBackgroundSize: true,
+                                });
+                                break
+                            default:
+                                console.warn('ProcessPlaceholder.Error', o.tagName, o.outerHTML)
+                                break
+                        }
+                    });
+            });
+        }
+        const watchPageHtml = function () {
+            $.get("bricks/" + page + ".html?" + Math.random(), {}, function (html) {
+                const md5 = MS.util.md5(html)
+                if (pageHtmlMd5 !== md5) {
+                    setPageHtml(html)
+                    pageHtmlMd5 = md5
+                }
+                setTimeout(watchPageHtml, 5000)
+            }).fail(function (html) {
+                setTimeout(watchPageHtml, 5000)
+            })
+        }
+        watchPageHtml()
+        less.watch()
+
+        window.DelayExecute = function (delay, cb) {
+            setTimeout(function () {
+                cb()
+            }, delay);
+        }
+
+    });
+</script>
+</body>
+</html>

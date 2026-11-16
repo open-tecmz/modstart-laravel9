@@ -1,0 +1,112 @@
+.ub-modal {
+    display: block;
+    visibility: hidden;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1010;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--color-mask);
+    opacity: 0;
+    -webkit-transition: opacity 0.24s var(--ease-out);
+    transition: opacity 0.24s var(--ease-out);
+    touch-action: cross-slide-y pinch-zoom double-tap-zoom;
+}
+
+.ub-modal.ub-disable-animate {
+    -webkit-transition: none;
+    transition: none;
+
+    .ub-modal-dialog {
+        -webkit-transition: none;
+        transition: none;
+    }
+}
+
+.ub-modal.ub-open {
+    opacity: 1;
+    display: block;
+    visibility: visible;
+}
+
+.ub-modal-dialog {
+    position: relative;
+    box-sizing: border-box;
+    margin: 3.125rem auto;
+    padding: 0;
+    width: 37.5rem;
+    max-width: 100%;
+    max-width: calc(100% - 1.25rem);
+    background: var(--color-content-bg);
+    opacity: 0;
+    -webkit-transform: translateY(-0.75rem) scale(0.98);
+    transform: translateY(-0.75rem) scale(0.98);
+    -webkit-transition: opacity 0.24s var(--ease-out), -webkit-transform 0.3s var(--ease-out);
+    transition: opacity 0.24s var(--ease-out), transform 0.3s var(--ease-out);
+    border-radius: var(--size-radius-lg);
+    box-shadow: var(--box-shadow-lg);
+    overflow: hidden;
+}
+
+///* Phone landscape and smaller */
+@media (max-width: 50rem) {
+    .ub-modal-dialog {
+        width: auto;
+        margin: 0.625rem auto;
+    }
+}
+
+.ub-open .ub-modal-dialog {
+    /* 4 */
+    opacity: 1;
+    -webkit-transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1);
+}
+
+.ub-modal-dialog > .ub-modal-close {
+    position: absolute;
+    right: 0.9375rem;
+    top: 0.625rem;
+    font-size: 0.875rem;
+    color: var(--color-tertiary);
+    line-height: 1.875rem;
+    width: 1.875rem;
+    height: 1.875rem;
+    text-align: center;
+    border-radius: 50%;
+    transition: var(--transition);
+
+    &:hover {
+        color: var(--color-danger);
+        background-color: var(--color-danger-light);
+    }
+}
+
+.ub-modal-dialog {
+    & > .ub-modal-head {
+        border-bottom: 0.0625rem solid var(--color-body-line);
+        padding: 0.625rem;
+
+        & > .title {
+            line-height: 1.875rem;
+            height: 1.875rem;
+            color: var(--color-heading);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+    }
+
+    & > .ub-modal-body {
+        padding: 0.625rem;
+        color: var(--color-text);
+    }
+
+    & > .ub-modal-foot {
+        padding: 0.625rem;
+        text-align: right;
+        border-top: 0.0625rem solid var(--color-body-line);
+    }
+}

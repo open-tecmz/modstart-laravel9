@@ -1,0 +1,32 @@
+<?php
+
+
+namespace Module\Welcome\Core;
+
+
+use Illuminate\Events\Dispatcher;
+use Illuminate\Support\ServiceProvider;
+use Module\Vendor\Provider\HomePage\HomePageProvider;
+
+class ModuleServiceProvider extends ServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot(Dispatcher $events)
+    {
+        HomePageProvider::register(WelcomeHomePageProvider::class);
+    }
+
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+
+    }
+}

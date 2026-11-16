@@ -1,0 +1,257 @@
+// element-ui
+@import "../../vendor/element-ui/index";
+@import "../../sui/adapt/element-ui";
+@import "../../sui/adapt/layui";
+@import "../../sui/adapt/ms";
+
+// ui-brick
+@import "../../sui/base/style";
+@import "../../sui/bricks/component/header/header";
+@import "../../sui/bricks/component/footer/footer";
+@import "../../sui/bricks/component/search/search";
+@import "../../sui/bricks/component/article/article";
+@import "../../sui/bricks/component/list/list";
+@import "../../sui/bricks/component/html/html";
+@import "../../sui/bricks/component/misc/misc";
+@import "../../sui/bricks/component/misc/cover";
+@import "../../sui/bricks/component/comment/comment";
+@import "../../sui/bricks/component/tag/tag";
+@import "../../sui/bricks/component/nav/nav";
+@import "../../sui/bricks/component/menu/menu";
+@import "../../sui/bricks/component/page/page";
+@import "../../sui/bricks/component/panel/panel";
+@import "../../sui/bricks/component/modal/modal";
+@import "../../sui/bricks/page/panel/panel";
+@import "../../sui/bricks/page/account/account";
+@import "../../sui/bricks/component/lister/lister";
+@import "../../sui/bricks/component/form/form";
+@import "../../sui/bricks/component/image/image";
+@import "../../sui/bricks/component/i18n/i18n";
+@import "../../sui/bricks/component/bar/bar";
+@import "../../sui/bricks/component/animate/animate";
+
+body, html {
+    background: var(--color-body-bg);
+    color: var(--color-text);
+}
+
+[v-cloak] {
+    display: none;
+}
+
+// Grid list page root container: it is the card that wraps search + table + pager
+// on every list page, so it must consume the same card tokens as `.ub-panel` /
+// `.ub-content-box` (hardcoded #FFF / 0.25rem used to make list pages look flat,
+// squared off and stuck in light mode).
+.ub-lister-table-container {
+    background: var(--color-content-bg);
+    padding: var(--size-padding);
+    border-radius: var(--size-radius);
+    border: 0.0625rem solid var(--color-body-line);
+    box-shadow: var(--box-shadow);
+
+    .toolbox-container {
+        float: right;
+    }
+
+    .table-addition-container {
+
+        &:has(*) {
+            margin-bottom: 0.625rem;
+        }
+    }
+
+    .table-container {
+        width: 100%;
+        //margin-top: -10px;
+    }
+
+    .page-container {
+        // background: #FFF;
+        //padding: 0 0.625rem;
+
+        .layui-laypage {
+            margin: 0.625rem 0 0.375rem 0;
+
+            span {
+                background: transparent;
+            }
+
+            .layui-laypage-spr {
+                background: var(--color-content-bg);
+            }
+        }
+    }
+}
+
+.ub-upload-button {
+    overflow: hidden;
+    position: relative;
+    height:2rem;
+
+    &.flat {
+        margin: 0 auto;
+
+        .webuploader-container {
+            display: block;
+
+            .webuploader-pick {
+                display: block;
+            }
+        }
+    }
+
+    &.queue {
+        overflow: auto;
+        height: auto;
+
+        .webuploader-list {
+            position: static;
+            max-height: 12.5rem;
+            overflow-y: auto;
+            border: 1px solid var(--color-body-line);
+            background: var(--color-body-bg);
+            padding: 0.3125rem;
+
+            &::-webkit-scrollbar-track {
+                background-color: var(--color-scrollbar-bg);
+                border: none;
+            }
+
+            &::-webkit-scrollbar {
+                width: 0.3125rem;
+                height: 0.3125rem;
+                background-color: var(--scolor-scrollbar-thumb);
+            }
+
+            &::-webkit-scrollbar-thumb {
+                border-radius: 0.625rem;
+                background-color: var(--scolor-scrollbar-thumb);
+            }
+
+            & > li {
+                margin-bottom: 0.625rem;
+                padding: 0.3125rem;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+
+                .progress-box {
+                    height: auto;
+                }
+
+                .progress-info {
+                    display: block;
+                }
+            }
+        }
+    }
+
+    .webuploader-pick {
+        display: inline-block;
+    }
+
+    .webuploader-pick-hover {
+        .btn {
+            outline-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+    }
+
+    .webuploader-container {
+        display: inline-block;
+    }
+
+    .webuploader-list {
+        position: absolute;
+        bottom: 1px;
+        left: 2px;
+        right: 2px;
+        border: none;
+        padding: 0;
+
+        & > li {
+            padding: 0;
+            border: 0;
+
+            .progress-info {
+                display: none;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    body > :not(.ub-panel-dialog) {
+        .ub-form {
+            .line {
+                padding: 0.625rem;
+
+                .label {
+                    float: none;
+                    margin: 0;
+                    width: 100%;
+                    text-align: left;
+                    line-height: inherit !important;
+                    padding-bottom: 0.125rem;
+                }
+            }
+        }
+    }
+}
+
+
+// 兼容之前未引入组件样式开始
+.ub-field-cascade-group {
+}
+
+.ub-field-cascade-group.cascade-group-hide {
+    visibility: hidden;
+    height: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+.ub-status-text {
+    display: inline-block;
+    margin-right: 0.625rem;
+}
+
+.ub-text-ajax-request {
+    display: inline-block;
+    margin-right: 0.625rem;
+}
+
+.ub-text-dialog-request {
+    display: inline-block;
+    margin-right: 0.625rem;
+}
+
+.ub-text-action {
+    display: inline-block;
+    margin-right: 0.625rem;
+}
+
+.ub-text-link {
+    display: inline-block;
+    margin-right: 0.625rem;
+}
+
+.ub-button-ajax-request {
+    display: inline-block;
+}
+
+.ub-button-dialog-request {
+    display: inline-block;
+}
+
+// 兼容之前未引入组件样式结束
+
+
+// ---------------------------------------------------------------------------
+// 站点主题自定义：修改品牌色/圆角/字体等，请编辑 theme.custom.less
+// 必须放在最后：同优先级下后定义者生效，才能覆盖 sui/base/theme.less 的默认值
+// 注意：必须写完整文件名（带 .less），否则 less 会把 ".custom" 当成扩展名
+// ---------------------------------------------------------------------------
+@import "theme.custom.less";

@@ -1,0 +1,491 @@
+<?php
+
+namespace ModStart\Command;
+
+use Illuminate\Console\Command;
+use ModStart\Module\ModuleManager;
+use ModStart\Test\TestContext;
+
+class SeedTestCommand extends Command
+{
+    use SeedTestTrait;
+
+    protected $signature = 'modstart:seed-test
+        {--module= : 只测试指定模块（逗号分隔，如 Question,Problem），默认全部模块}
+        {--phase= : 只测试指定阶段（逗号分隔，可选 seed,api,biz,ui），默认全部阶段}
+        {--file= : 只运行文件名（相对路径）包含该关键字的测试脚本}
+        {--test= : 只运行测试用例名称包含该关键字的用例}
+        {--reset : 强制重建测试数据库（删除全部表 + 迁移 + 安装全部模块）}
+        {--no-reset : 跳过数据库重建，直接运行测试}';
+
+    protected $description = '执行系统自动化测试（支持定向测试：--module / --phase / --file / --test）';
+
+    /**
+     * 文件名关键字过滤器
+     * @var string
+     */
+    private $fileFilter = '';
+
+    /**
+     * 是否运行系统测试目录（test/seed 等）
+     * @var bool
+     */
+    private $runSystemTests = true;
+
+    public function handle()
+    {
+        // 全量测试（尤其 UI 阶段的真实浏览器交互）耗时可能超过 CLI 默认执行上限，
+        // 这里显式取消执行时间限制，避免测试被 60 秒上限中断
+        @set_time_limit(0);
+        // 同一时间只允许一个 seed-test 运行，避免并发操作数据库互相干扰
+        if (!$this->acquireRunLock()) {
+            return 1;
+        }
+        try {
+            return $this->runTests();
+        } finally {
+            // 无论正常结束还是异常抛出，均在此释放锁（进程崩溃时由系统自动释放）
+            $this->releaseRunLock();
+        }
+    }
+
+    /**
+     * 执行测试主体流程
+     *
+     * @return int 退出码
+     */
+    private function runTests()
+    {
+        if (!$this->checkTestEnvironment()) {
+            return 1;
+        }
+
+        $modules = $this->resolveTargetModules();
+        $phases = $this->resolvePhases();
+        $this->fileFilter = trim((string)$this->option('file'));
+        $testFilter = trim((string)$this->option('test'));
+        // 指定了 module / file / test 即视为定向测试
+        $targeted = ($this->option('module') !== null && trim((string)$this->option('module')) !== '')
+            || '' !== $this->fileFilter
+            || '' !== $testFilter;
+        // 定向测试默认不重建数据库；全量测试默认重建
+        $doReset = $this->option('reset') || (!$this->option('no-reset') && !$targeted);
+        // 指定模块时只跑该模块的测试目录，不跑系统测试目录
+        $this->runSystemTests = (null === $this->option('module') || trim((string)$this->option('module')) === '');
+
+        TestContext::reset();
+        TestContext::setTestFilter($testFilter);
+
+        $this->info('');
+        $this->info('=== modstart:seed-test ===');
+        $this->info('  测试模块: ' . (empty($modules) ? '(无)' : implode(', ', $modules)) . ($this->runSystemTests ? ' + 系统' : ''));
+        $this->info('  测试阶段: ' . implode(', ', $phases));
+        if ('' !== $this->fileFilter) {
+            $this->info('  文件过滤: ' . $this->fileFilter);
+        }
+        if ('' !== $testFilter) {
+            $this->info('  用例过滤: ' . $testFilter);
+        }
+        $this->info('  数据库重建: ' . ($doReset ? '是' : '否（定向测试）'));
+        $this->info('');
+
+        if ($doReset) {
+            // Step 1: 删除所有数据库表
+            $this->comment('[ Step 1 ] 删除所有数据库表');
+            if (!$this->dropAllTables()) {
+                return 1;
+            }
+
+            // Step 2: 运行数据库迁移
+            $this->comment('[ Step 2 ] 运行 migrate');
+            if (!$this->runMigrate()) {
+                return 1;
+            }
+
+            // Step 3: 安装所有模块（部分模块可能有非致命错误，不中断）
+            $this->comment('[ Step 3 ] 运行 modstart:module-install-all');
+            $this->installAllModules();
+        } else {
+            $this->comment('[ 跳过 ] 数据库重建（定向测试模式，如需重建请加 --reset）');
+        }
+
+        // 校验修改过的迁移文件类名（类名错误会在 migrate 时崩溃，需前置校验）
+        $this->comment('[ 校验 ] 迁移文件类名');
+        if (!$this->checkMigrationClassNames()) {
+            return 1;
+        }
+
+        // 初始化默认超级管理员（admin / 123456）
+        $this->comment('[ 初始化 ] 默认超级管理员');
+        $this->initDefaultAdmin();
+
+        // 按选择的阶段依次执行
+        if (in_array('seed', $phases)) {
+            $this->comment('[ Phase 1 ] Seed');
+            $this->runPhase('seed', $modules, 'Seed');
+        }
+        if (in_array('api', $phases)) {
+            $this->comment('[ Phase 2 ] API Tests');
+            $this->runPhase('api', $modules, 'Api');
+        }
+        if (in_array('biz', $phases)) {
+            $this->comment('[ Phase 3 ] Biz Tests');
+            $this->runPhase('biz', $modules, 'Biz');
+        }
+        if (in_array('ui', $phases)) {
+            $this->comment('[ Phase 4 ] UI Tests');
+            $this->runUiPhase($modules);
+        }
+
+        // 输出汇总
+        $this->info('');
+        $this->info('=== 测试汇总 ===');
+        $this->info('通过: ' . TestContext::getPassed());
+        if (TestContext::getSkipped() > 0) {
+            $this->info('跳过: ' . TestContext::getSkipped());
+        }
+        if (TestContext::hasFailure()) {
+            $this->error('失败: ' . TestContext::getFailed());
+            foreach (TestContext::getFailures() as $failure) {
+                $this->error('  [FAIL] ' . $failure['name']);
+                if ($failure['reason']) {
+                    $this->error('         ' . $failure['reason']);
+                }
+                if ($failure['file']) {
+                    $this->error('         in ' . $failure['file']);
+                }
+            }
+            return 1;
+        } else {
+            $this->info('失败: 0');
+            $this->info('');
+            $this->info('所有测试通过！');
+            return 0;
+        }
+    }
+
+    /**
+     * 解析目标模块列表（--module）
+     *
+     * @return array 已启用的模块名列表
+     */
+    private function resolveTargetModules()
+    {
+        $enabled = array_keys(ModuleManager::listAllEnabledModules());
+        $option = trim((string)$this->option('module'));
+        if ('' === $option) {
+            return $enabled;
+        }
+        $wanted = array_filter(array_map('trim', explode(',', $option)), function ($m) {
+            return '' !== $m;
+        });
+        $result = [];
+        foreach ($wanted as $module) {
+            if (in_array($module, $enabled)) {
+                $result[] = $module;
+            } else {
+                $this->warn('  模块 ' . $module . ' 未启用或不存在，已忽略');
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 解析目标阶段（--phase）
+     *
+     * @return array
+     */
+    private function resolvePhases()
+    {
+        $allow = ['seed', 'api', 'biz', 'ui'];
+        $option = trim((string)$this->option('phase'));
+        if ('' === $option) {
+            return $allow;
+        }
+        $phases = [];
+        foreach (array_map('trim', explode(',', $option)) as $phase) {
+            if (in_array($phase, $allow) && !in_array($phase, $phases)) {
+                $phases[] = $phase;
+            } elseif ('' !== $phase) {
+                $this->warn('  未知阶段 ' . $phase . '（可选 ' . implode(',', $allow) . '），已忽略');
+            }
+        }
+        return $phases;
+    }
+
+    /**
+     * 运行一个阶段的所有脚本文件
+     *
+     * @param string $systemDir  /test/ 下的子目录名，如 seed / api / biz
+     * @param array  $modules    模块名列表
+     * @param string $moduleDir  模块 Test/ 下的子目录名，如 Seed / Api / Biz
+     */
+    private function runPhase($systemDir, $modules, $moduleDir)
+    {
+        // 先运行系统测试目录
+        if ($this->runSystemTests) {
+            $this->runFilesInDir(base_path('test/' . $systemDir));
+        }
+        // 再运行各模块测试目录
+        foreach ($modules as $module) {
+            // Seed 阶段：模块测试种子只认单文件 module/<Module>/Test/Seed.php（不扫描目录）
+            if ('Seed' === $moduleDir) {
+                $this->runSeedFile($module);
+                continue;
+            }
+            $modulePath = ModuleManager::path($module, 'Test/' . $moduleDir);
+            $this->runFilesInDir($modulePath);
+        }
+    }
+
+    /**
+     * 运行模块单文件测试种子 Test/Seed.php（Seed 阶段唯一位置）
+     *
+     * @param string $module 模块标识
+     */
+    private function runSeedFile($module)
+    {
+        $file = ModuleManager::path($module, 'Test/Seed.php');
+        if (!is_file($file)) {
+            return;
+        }
+        if ('' !== $this->fileFilter) {
+            $relativePath = str_replace(base_path('/'), '', $file);
+            if (stripos($relativePath, $this->fileFilter) === false
+                && stripos(basename($file), $this->fileFilter) === false) {
+                return;
+            }
+        }
+        $this->runFile($file);
+    }
+
+    /**
+     * 运行 UI 测试阶段
+     *
+     * UI 测试依赖真实 HTTP Server（php artisan serve）。
+     * 有 UI 测试文件时才启动 server，并统一：
+     *   1. 启动 server
+     *   2. 清理 storage/logs
+     *   3. 执行各 UI 测试文件
+     *   4. 关闭 server（避免内存泄露 / 端口占用）
+     *
+     * @param array $modules 模块名列表
+     */
+    private function runUiPhase($modules)
+    {
+        if (!$this->hasUiTestFiles($modules)) {
+            $this->line('  没有匹配的 UI 测试文件，跳过');
+            return;
+        }
+        $this->line('  启动 php artisan serve ...');
+        $serverStarted = \ModStart\Test\TestServer::start();
+        if ($serverStarted) {
+            $this->line('  Server: ' . \ModStart\Test\TestServer::baseUrl());
+        } else {
+            $this->warn('  php artisan serve 启动失败，UI 页面断言将使用内部 HTTP Kernel（同进程）');
+        }
+        // 启动真实浏览器（Node + playwright-core + Chrome headless），供 UI 测试使用
+        $browserStarted = false;
+        if ($serverStarted && \ModStart\Test\TestBrowser::available()) {
+            $this->line('  启动真实浏览器（Chrome headless）...');
+            $browserStarted = \ModStart\Test\TestBrowser::start();
+            if (!$browserStarted) {
+                $this->warn('  浏览器启动失败，UI 测试将降级为内部 HTTP Kernel');
+            }
+        }
+        // 清理日志，确保只统计本次 UI 测试产生的错误
+        \ModStart\Test\TestUi::clearLog();
+        try {
+            if ($this->runSystemTests) {
+                $this->runFilesInDir(base_path('test/ui'));
+            }
+            foreach ($modules as $module) {
+                $modulePath = ModuleManager::path($module, 'Test/UI');
+                $this->runFilesInDir($modulePath);
+            }
+        } finally {
+            if ($browserStarted) {
+                $this->line('  关闭真实浏览器 ...');
+                \ModStart\Test\TestBrowser::stop();
+            }
+            if ($serverStarted) {
+                $this->line('  关闭 php artisan serve ...');
+                \ModStart\Test\TestServer::stop();
+            }
+        }
+    }
+
+    /**
+     * 判断系统或任一目标模块是否存在（匹配过滤条件后的）UI 测试文件
+     * @param array $modules
+     * @return bool
+     */
+    private function hasUiTestFiles($modules)
+    {
+        if ($this->runSystemTests) {
+            $files = $this->matchFiles(base_path('test/ui'));
+            if (!empty($files)) {
+                return true;
+            }
+        }
+        foreach ($modules as $module) {
+            $path = ModuleManager::path($module, 'Test/UI');
+            if (!empty($this->matchFiles($path))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 返回目录下匹配文件名过滤条件的 .php 文件
+     *
+     * @param string $dir
+     * @return array
+     */
+    private function matchFiles($dir)
+    {
+        if (!is_dir($dir)) {
+            return [];
+        }
+        $files = glob($dir . '/*.php');
+        if (empty($files)) {
+            return [];
+        }
+        if ('' === $this->fileFilter) {
+            return $files;
+        }
+        $result = [];
+        foreach ($files as $file) {
+            $relativePath = str_replace(base_path('/'), '', $file);
+            if (stripos($relativePath, $this->fileFilter) !== false || stripos(basename($file), $this->fileFilter) !== false) {
+                $result[] = $file;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 运行目录下匹配过滤条件的所有 .php 文件
+     *
+     * @param string $dir
+     */
+    private function runFilesInDir($dir)
+    {
+        foreach ($this->matchFiles($dir) as $file) {
+            $this->runFile($file);
+        }
+    }
+
+    /**
+     * 加载并执行单个测试文件，捕获异常记录为失败
+     *
+     * @param string $file
+     */
+    private function runFile($file)
+    {
+        $relativePath = str_replace(base_path('/'), '', $file);
+        $this->line('  > ' . $relativePath);
+        TestContext::setCurrentFile($relativePath);
+        try {
+            include $file;
+        } catch (\Exception $e) {
+            TestContext::fail($relativePath, $e->getMessage());
+            $this->error('    [ERROR] ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * 校验 git 修改过的迁移文件类名是否与文件名推导一致
+     *
+     * Laravel 的 Migrator::resolve() 根据迁移文件名推导类名：
+     *   $file = implode('_', array_slice(explode('_', $file), 4));
+     *   $class = Str::studly($file);
+     * 若类名与推导结果不一致，migrate 时会报 "Class not found"。
+     * 只校验未提交（git 修改/新增）的迁移文件，避免影响历史已发布文件。
+     *
+     * @return bool 校验通过返回 true
+     */
+    private function checkMigrationClassNames()
+    {
+        $files = $this->getChangedMigrationFiles();
+        if (empty($files)) {
+            $this->info('  没有修改过的迁移文件，或 git 不可用，跳过类名校验');
+            return true;
+        }
+        $fail = false;
+        foreach ($files as $file) {
+            // 模拟 Laravel Migrator::resolve() 的类名推导
+            $filename = basename($file, '.php');
+            $parts = explode('_', $filename);
+            $namePart = implode('_', array_slice($parts, 4));
+            $expectedClass = \Illuminate\Support\Str::studly($namePart);
+
+            $content = @file_get_contents($file);
+            if ($content === false) {
+                $this->error('  无法读取迁移文件: ' . $file);
+                $fail = true;
+                continue;
+            }
+            if (!preg_match('/class\s+(\w+)\s+extends\s+Migration/', $content, $m)) {
+                $this->error('  ' . $filename . ' 未找到 "class Xxx extends Migration" 声明');
+                $fail = true;
+                continue;
+            }
+            $actualClass = $m[1];
+            if ($actualClass !== $expectedClass) {
+                $this->error('  ' . $filename . ' 类名为 ' . $actualClass . '，但 Laravel 按文件名推导应为 ' . $expectedClass . '（迁移类名必须与文件名保持一致）');
+                $fail = true;
+            }
+        }
+        if ($fail) {
+            return false;
+        }
+        $this->info('  迁移文件类名校验通过（共 ' . count($files) . ' 个修改的迁移文件）');
+        return true;
+    }
+
+    /**
+     * 获取 git 修改/新增的迁移文件列表
+     *
+     * 覆盖系统迁移目录（database/migrations/）与所有模块迁移目录（module 下各模块的 Migrate/ 目录）
+     *
+     * @return array 迁移文件绝对路径列表；git 不可用或非 git 仓库时返回空数组（跳过校验）
+     */
+    private function getChangedMigrationFiles()
+    {
+        $gitRoot = base_path();
+        $files = [];
+        // 不带路径过滤获取全部变更，避免 git pathspec glob 不可靠的问题
+        $cmd = 'git -C ' . escapeshellarg($gitRoot) . ' status --porcelain --untracked-files=all';
+        $output = [];
+        exec($cmd, $output, $exitCode);
+        if ($exitCode !== 0) {
+            // git 不可用或非 git 仓库时无法判断哪些文件是本次修改的，跳过校验
+            return $files;
+        }
+        foreach ($output as $line) {
+            $relPath = trim(substr($line, 3)); // porcelain 格式: "XY path"，去掉前3个字符(状态2位+空格)
+            if ($relPath === '') {
+                continue;
+            }
+            // 处理 rename 情况： "old -> new"
+            if (strpos($relPath, ' -> ') !== false) {
+                $relPath = trim(substr($relPath, strpos($relPath, ' -> ') + 4));
+            }
+            // 仅保留迁移目录下的 PHP 文件：系统迁移 或 模块迁移
+            if (!preg_match('/(^|\/)database\/migrations\/.+\.php$/', $relPath)
+                && !preg_match('/(^|\/)Migrate\/.+\.php$/', $relPath)) {
+                continue;
+            }
+            $absPath = $gitRoot . '/' . $relPath;
+            if (is_file($absPath)) {
+                $files[] = $absPath;
+            }
+        }
+        $files = array_unique($files);
+        sort($files);
+        return $files;
+    }
+
+}

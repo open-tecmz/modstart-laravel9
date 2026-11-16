@@ -1,0 +1,17 @@
+{
+    "name": "Welcome",
+    "title": "欢迎首页",
+    "require": [
+        "Vendor"
+    ],
+    "version": "1.0.0",
+    "author": "ModStart",
+    "description": "提供介绍型的欢迎首页，介绍 ModStart 框架并提供后台、文档、模块市场的快捷入口",
+    "env": [
+        "laravel5",
+        "laravel9",
+        "laravel13"
+    ],
+    "config": {},
+    "modstartVersion": ">=6.0.0"
+}

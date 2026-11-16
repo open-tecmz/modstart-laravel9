@@ -1,0 +1,45 @@
+<?php
+
+
+namespace Module\Vendor\Admin\Controller;
+
+
+use Illuminate\Routing\Controller;
+use ModStart\Core\Input\InputPackage;
+use Illuminate\Support\Facades\Session;
+use ModStart\Admin\Layout\AdminPage;
+use ModStart\Core\Exception\BizException;
+use ModStart\Core\Input\Response;
+use ModStart\Form\Form;
+use ModStart\Widget\Box;
+
+class SecurityController extends Controller
+{
+    public static $PermitMethodMap = [
+        '*' => '*',
+    ];
+
+    public function secondVerify(AdminPage $page)
+    {
+        $input = InputPackage::buildFromInput();
+        $redirect = $input->getTrimString('redirect', modstart_admin_url(''));
+        // 防止开放重定向 / javascript: 协议跳转 XSS：只允许站内安全地址
+        if (!\ModStart\Core\Util\UrlUtil::isSafeRedirect($redirect)) {
+            $redirect = modstart_admin_url('');
+        }
+        $form = Form::make('');
+        $form->password('password', '安全验证密码');
+        $form->showReset(false);
+        $form->formClass('wide');
+        return $page->pageTitle('二次安全验证')
+            ->body(Box::make($form, '二次安全验证'))
+            ->handleForm($form, function (Form $form) use ($redirect) {
+                $data = $form->dataForming();
+                $password = $data['password'];
+                $passwordCorrectMd5 = modstart_config('Vendor_SecuritySecondVerifyPassword');
+                BizException::throwsIf('密码不正确', md5($password) != $passwordCorrectMd5);
+                Session::put('Vendor_SecuritySecondVerifyTime', time() + 3600);
+                return Response::send(0, null, null, $redirect);
+            });
+    }
+}

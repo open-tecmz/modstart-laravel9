@@ -1,0 +1,33 @@
+@extends('modstart::layout.frame')
+
+@section('pageFavIco'){{modstart_config('siteFavIco')?\ModStart\Core\Assets\AssetsUtil::fix(modstart_config('siteFavIco')):\ModStart\Core\Assets\AssetsUtil::fix('favicon.ico')}}@endsection
+@section('pageTitle')@yield('pageTitleMain','') | {{modstart_config('siteName')}}@endsection
+@section('pageKeywords'){{modstart_config('siteKeywords')}}@endsection
+@section('pageDescription'){{modstart_config('siteDescription')}}@endsection
+
+@section('headAppend')
+    @parent
+    @if('default'==\Illuminate\Support\Facades\Session::get('msSiteTemplateUsing','default'))
+        <link rel="stylesheet" href="{{\ModStart\Core\Assets\AssetsUtil::fix('theme/default/css/style.css')}}"/>
+    @endif
+    @if($c=modstart_config('sitePrimaryColor'))
+        <style type="text/css">{!! \ModStart\Core\Util\ColorUtil::primaryColorCss($c) !!}</style>
+    @endif
+    {!! \ModStart\Core\Hook\ModStartHook::fireInView('PageHeadAppend'); !!}
+@endsection
+
+@section('bodyAppend')
+    @parent
+    {!! \ModStart\Core\Hook\ModStartHook::fireInView('PageBodyAppend'); !!}
+@endsection
+
+@section('body')
+
+    @include('theme.default.pc.share.header')
+
+    @section('bodyContent')
+    @show
+
+    @include('theme.default.pc.share.footer')
+
+@endsection

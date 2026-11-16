@@ -1,0 +1,703 @@
+
+.ub-nav-header {
+    font-size: 1.875rem;
+    font-weight: 600;
+    padding: 2.5rem 0;
+    text-align: center;
+    color: var(--color-heading);
+    letter-spacing: -0.01em;
+    opacity: 0.9;
+}
+
+.ub-nav-header-sub {
+    opacity: 0.6;
+    text-align: center;
+    font-size: 1.25rem;
+    color: var(--color-tertiary);
+    margin-top: -3.75rem;
+    padding: 2.5rem 0;
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-nav-header {
+        padding: 1.25rem 0;
+        font-size: var(--font-size-large);
+    }
+
+    .ub-nav-header-sub {
+        margin-top: -2.5rem;
+        padding: 1.25rem 0;
+        font-size: var(--font-size);
+    }
+}
+
+.ub-dropdown {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+
+    .ub-dropdown-title {
+        // 下拉指示箭头：组件原本没有，用户反馈"这个下拉菜单怎么没箭头了"。
+        // 画法用"正方形 + 右/下边框 + 旋转 45°"：箭头的几何中心和元素盒中心重合，
+        // 展开时再转 180° 只改变指向，位置不动。
+        // （原来用 border 三角形：三角形只占元素盒的上半部分，
+        //   旋转 180° 后视觉上会整体下移约半个边长，看起来像"箭头跑掉了"）
+        &:after {
+            content: '';
+            display: inline-block;
+            width: 0.3125rem;
+            height: 0.3125rem;
+            margin-left: 0.4375rem;
+            border-right: 0.09375rem solid var(--color-muted);
+            border-bottom: 0.09375rem solid var(--color-muted);
+            vertical-align: 0.1875rem;
+            transform: rotate(45deg);
+            transition: var(--transition);
+        }
+    }
+
+    &:hover {
+        .ub-dropdown-list {
+            display: block;
+        }
+
+        .ub-dropdown-title:after {
+            border-color: var(--color-primary);
+            transform: rotate(225deg);
+        }
+    }
+
+    .ub-dropdown-list {
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 100%;
+        background: var(--color-content-bg);
+        box-shadow: var(--box-shadow-pop);
+        border-radius: var(--size-radius);
+        z-index: 1000;
+        overflow: hidden;
+
+        .ub-dropdown-list-item {
+            display: block;
+            color: var(--color-text);
+            padding: 0 0.625rem;
+            line-height: 1.875rem;
+            margin: 0;
+            white-space: nowrap;
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-primary);
+                background: var(--color-primary-light-bg);
+            }
+        }
+    }
+}
+
+.ub-breadcrumb {
+    min-height: 2.5rem;
+    padding: 0.625rem 0;
+    white-space: nowrap;
+    overflow: auto;
+
+    span, .text {
+        color: var(--color-tertiary);
+
+        &.active {
+            color: var(--color-primary);
+        }
+    }
+
+    a, .item {
+        color: var(--color-tertiary);
+        display: inline-block;
+        padding-right: 0.625rem;
+        line-height: 1.25rem;
+        transition: var(--transition);
+
+        &:after {
+            content: '';
+            display: inline-block;
+            margin-left: 0.625rem;
+            color: var(--color-tertiary-light);
+            background-image: var(--icon-arrow);
+            width: 0.5rem;
+            height: 0.5rem;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.3;
+        }
+
+        &:last-child {
+            &:after {
+                display: none;
+            }
+        }
+
+        &:hover {
+            color: var(--color-primary);
+        }
+
+        &.active {
+            color: var(--color-primary);
+        }
+    }
+}
+
+.ub-nav {
+    padding: var(--size-margin);
+    background: var(--color-content-bg);
+    border-radius: var(--size-radius);
+    position: relative;
+
+    .tag-label {
+        position: absolute;
+        left: var(--size-margin);
+        top: var(--size-margin);
+        line-height: 1.25rem;
+        padding: 0.125rem 0.5rem;
+        margin: 0 0.3125rem 0 0;
+        color: var(--color-primary);
+    }
+
+    .tag-value {
+        padding-left: 4em;
+
+        .tag-item {
+            display: inline-block;
+            position: relative;
+            border: 0.0625rem solid var(--color-body-line);
+            border-radius: 1rem;
+            line-height: 1.25rem;
+            padding: 0.125rem 0.625rem;
+            margin: 0 0.3125rem 0 0;
+            cursor: default;
+            transition: var(--transition);
+
+            &:hover {
+                border-color: var(--color-primary);
+
+                .close {
+                    display: block;
+                }
+            }
+
+            .close {
+                padding: 0;
+                margin: 0;
+                font-size: 0.5rem;
+                position: absolute;
+                width: 0.875rem;
+                height: 0.875rem;
+                text-align: center;
+                line-height: 0.875rem;
+                top: -0.375rem;
+                right: -0.375rem;
+                background: var(--color-mask);
+                color: #fff;
+                border-radius: 50%;
+                display: none;
+            }
+        }
+    }
+
+    .nav-right {
+        float: right;
+
+        .item {
+            margin-right: 0;
+
+            &.active {
+                background: var(--color-primary-light-bg);
+                color: var(--color-primary);
+            }
+        }
+    }
+
+    a, .item {
+        display: inline-block;
+        color: var(--color-text);
+        border-radius: 999px;
+        line-height: 1.25rem;
+        padding: 0.3281rem 0.625rem;
+        margin: 0 0.3125rem 0 0;
+        transition: var(--transition);
+
+        &:hover {
+            color: var(--color-primary);
+            background: var(--color-body-block-bg);
+        }
+
+        &.active {
+            background: var(--color-primary-light-bg);
+            color: var(--color-primary);
+        }
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    // 窄屏：右侧操作组取消右浮动并左对齐。
+    // 原来 float:right 会独占首行的右半段，主体条目被迫绕到下一行，
+    // 两行之间只差一个行高，看起来"排序这一堆和下面的菜单在垂直方向上贴在一起"。
+    // 改为普通块级独占一行，再跟主体条目，并留出一点间距。
+    .ub-nav {
+        .nav-right {
+            float: none;
+            display: block;
+            text-align: left;
+            margin-bottom: 0.375rem;
+
+            .item {
+                // 恢复条目之间的水平间距（桌面端为右浮动贴边，故设为 0）
+                margin-right: 0.3125rem;
+
+                &:last-child {
+                    margin-right: 0;
+                }
+            }
+        }
+    }
+}
+
+
+.ub-nav-group {
+    background: var(--color-content-bg);
+    border-radius: var(--size-radius);
+
+    &.bare {
+        .group {
+            padding-left: 0rem;
+        }
+    }
+
+    &.flat {
+        .group {
+            padding: 0;
+
+            .label {
+                position: static;
+                width: auto;
+                text-align: left;
+                padding: 0.625rem 0.625rem 0 0.625rem;
+
+                .text {
+                    position: static;
+                    margin: 0;
+                }
+            }
+
+            .items {
+                position: static;
+            }
+        }
+    }
+
+    .group {
+        background: var(--color-content-bg);
+        position: relative;
+        padding-left: 5rem;
+        overflow: hidden;
+        min-height: 2.5rem;
+        border-radius: var(--size-radius);
+
+        .label {
+            width: 5rem;
+            background: var(--color-content-bg);
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            text-align: center;
+
+            .text {
+                width: 100%;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                margin-left: -50%;
+                height: 1.25rem;
+                margin-top: -0.625rem;
+                font-size: var(--font-size, 0.8125rem);
+                color: var(--color-tertiary);
+            }
+        }
+
+        .items {
+            padding: 0.625rem 0.625rem 0.3125rem 0.625rem;
+            border-bottom: 0.0625rem solid var(--color-body-line);
+
+            a, .item {
+                display: inline-block;
+                color: var(--color-text);
+                line-height: 1.25rem;
+                padding: 0.3125rem 0.5rem;
+                margin: 0 0.1875rem 0.1875rem 0;
+                border-radius: 999px;
+                text-align: center;
+                background: var(--color-body-block-bg);
+                transition: var(--transition);
+
+                &:hover {
+                    color: var(--color-primary);
+                    background: var(--color-body-block-bg-hover);
+                }
+
+                &.active {
+                    background: var(--color-primary-light-bg);
+                    color: var(--color-primary);
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-nav-group {
+        .group {
+            padding: 0;
+
+            .label {
+                position: static;
+                width: auto;
+                text-align: left;
+                padding: 0.625rem 0.625rem 0 0.625rem;
+
+                .text {
+                    position: static;
+                    margin: 0;
+                }
+            }
+
+            .items {
+                position: static;
+                white-space: nowrap;
+                overflow-x: auto;
+            }
+        }
+    }
+}
+
+.ub-nav-tab {
+    background: var(--color-content-bg);
+    border-radius: var(--size-radius) var(--size-radius) 0 0;
+    border-bottom: 0.0625rem solid var(--color-body-line);
+    // Keep the first/last tab off the card edge: the active indicator must not touch the rounded corner
+    padding: 0 var(--size-margin);
+
+    &.mini {
+        a, .item {
+            line-height: 1.25rem;
+        }
+    }
+
+    a, .item {
+        display: inline-block;
+        color: var(--color-text);
+        line-height: 1.75rem;
+        padding: var(--size-margin);
+        margin: 0 0.3125rem 0 0;
+        border-bottom: 0.0625rem solid transparent;
+        border-radius: var(--size-radius-sm) var(--size-radius-sm) 0 0;
+        font-weight: 600;
+        transition: var(--transition);
+
+        &:hover {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-tertiary-light);
+        }
+
+        &:focus-visible {
+            outline: 0;
+            box-shadow: 0 0 0 0.1875rem var(--color-focus-ring);
+        }
+
+        // Single indicator: bottom line only, no background block
+        &.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+            // 1px shadow covers the bar's own 1px bottom border, so the indicator sits on the edge instead of floating above a grey hairline
+            box-shadow: 0 0.0625rem 0 0 var(--color-primary);
+        }
+
+        &.active:focus-visible {
+            box-shadow: 0 0 0 0.1875rem var(--color-focus-ring), 0 0.0625rem 0 0 var(--color-primary);
+        }
+    }
+}
+
+.ub-nav-tab-body {
+    background: var(--color-content-bg);
+    border-radius: 0 0 var(--size-radius) var(--size-radius);
+    padding: 0.625rem;
+
+    &.hidden {
+        width: 0px;
+        height: 0px;
+        overflow: hidden;
+        padding: 0;
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-breadcrumb {
+        padding-left: var(--size-margin);
+        padding-right: var(--size-margin);
+    }
+
+    .ub-nav {
+        min-height: 2.8125rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+}
+
+.ub-nav-mobile-foot-spacer {
+    height: 2.875rem;
+    clear: both;
+}
+
+.ub-nav-mobile-foot {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-content-bg);
+    border-top: 0.0625rem solid var(--color-body-line);
+    -webkit-box-pack: justify;
+    z-index: 1001;
+    padding: 0.3125rem 1.25rem;
+    height: 2.875rem;
+
+    .item {
+        text-align: center;
+        display: block;
+        color: var(--color-tertiary);
+        text-decoration: none;
+        flex: 1;
+        position: relative;
+        transition: var(--transition);
+
+        &.active {
+            color: var(--color-primary);
+
+            .icon {
+                color: var(--color-primary);
+
+                .img {
+                    color: var(--color-primary);
+                }
+            }
+        }
+
+        .icon {
+            font-size: 1.375rem;
+            height: 1.375rem;
+            line-height: 1.375rem;
+            color: var(--color-tertiary);
+
+            .img {
+                font-size: 1.375rem;
+                height: 1.375rem;
+                line-height: 1.375rem;
+                color: var(--color-tertiary);
+            }
+        }
+
+        .title {
+            height: 0.75rem;
+            font-size: 0.75rem;
+            -webkit-transform: scale(0.83333333);
+            transform: scale(0.83333333);
+        }
+
+        .name {
+            font-size: var(--font-size);
+        }
+
+        .badge {
+            position: absolute;
+            top: 0;
+            left: 60%;
+            background: var(--color-danger);
+            color: #fff;
+            height: 1rem;
+            line-height: 1rem;
+            font-size: 0.75rem;
+            border-radius: 0.5rem;
+            min-width: 1rem;
+            text-align: center;
+            padding: 0 0.25rem;
+        }
+    }
+}
+
+.ub-nav-mobile-foot-nav-spacer {
+    height: 2.5rem;
+    clear: both;
+}
+
+.ub-nav-mobile-foot-nav {
+    position: fixed;
+    bottom: 2.875rem;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-body-block-bg);
+    border-top: 0.0625rem solid var(--color-body-line);
+    z-index: 1001;
+    height: 2.5rem;
+    padding: 0.0625rem 0 0 0;
+
+    .item {
+        text-align: center;
+        display: block;
+        color: var(--color-tertiary);
+        text-decoration: none;
+        flex-grow: 1;
+        margin: 0 0.0625rem;
+        background: var(--color-content-bg);
+        transition: var(--transition);
+
+        &:hover {
+            color: var(--color-primary);
+            background: var(--color-primary-light-bg);
+        }
+
+        &.disabled {
+            .icon {
+                .img {
+                    color: var(--color-tertiary-light);
+                }
+            }
+
+            .name {
+                color: var(--color-tertiary-light);
+            }
+        }
+
+        .icon {
+            height: 2.5rem;
+            line-height: 2.5rem;
+            color: var(--color-primary);
+            display: inline-block;
+
+            .img {
+                font-size: var(--font-size);
+                height: 2.5rem;
+                line-height: 2.5rem;
+                color: var(--color-primary);
+            }
+        }
+
+        .name {
+            display: inline-block;
+            color: var(--color-primary);
+            font-size: var(--font-size);
+        }
+    }
+}
+
+.ub-nav-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 0.0625rem solid var(--color-body-line);
+    -webkit-box-pack: justify;
+    margin: 0;
+    padding: 0;
+    border-left: 0.0625rem solid var(--color-body-line);
+    background-color: var(--color-body-block-bg);
+    width: 100%;
+    flex-wrap: wrap;
+    border-radius: var(--size-radius);
+    overflow: hidden;
+
+    &.g3 {
+        &:after {
+            content: "";
+            width: 33.3333%;
+        }
+
+        .item {
+            width: 33.3333%;
+        }
+    }
+
+    .item {
+        text-align: center;
+        display: block;
+        color: var(--color-tertiary);
+        text-decoration: none;
+        vertical-align: top;
+        border-right: 0.0625rem solid var(--color-body-line);
+        border-bottom: 0.0625rem solid var(--color-body-line);
+        padding: 1.25rem 0.625rem;
+        width: 50%;
+        background: var(--color-content-bg);
+        flex-shrink: 0;
+        transition: var(--transition);
+
+        &:hover {
+            color: var(--color-primary);
+            background: var(--color-body-block-bg);
+        }
+
+        &.active {
+            color: var(--color-primary);
+            background: var(--color-primary-light-bg);
+        }
+
+        .icon {
+            font-size: 1.375rem;
+            height: 1.375rem;
+            line-height: 1.375rem;
+            color: inherit;
+
+            .img {
+                font-size: 1.375rem;
+                height: 1.375rem;
+                line-height: 1.375rem;
+                color: inherit;
+            }
+        }
+
+        .title {
+            height: 0.75rem;
+            font-size: 0.75rem;
+            line-height: 1.25rem;
+        }
+    }
+}
+
+.ub-nav-category {
+
+    .group-title {
+        font-size: 1rem;
+        display: block;
+        color: var(--color-heading);
+        font-weight: 600;
+        margin-bottom: 0.3125rem;
+        margin-top: 0.3125rem;
+    }
+
+    .group-list {
+        .item {
+            font-size: var(--font-size);
+            color: var(--color-tertiary);
+            display: inline-block;
+            margin: 0 0.1875rem 0.1875rem 0;
+            line-height: 1.5rem;
+            transition: var(--transition);
+
+            &.active, &:hover {
+                color: var(--color-primary);
+            }
+        }
+    }
+}

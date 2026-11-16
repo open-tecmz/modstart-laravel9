@@ -1,0 +1,1430 @@
+@import "../../../base/component/animate";
+@import "../../../base/theme";
+// .ub-list is built from .ub-panel (see below), so the panel must be available
+// even when this file is compiled on its own.
+@import "../panel/panel";
+
+@list-item-box-shadow: var(--box-shadow-xs);
+@list-item-box-shadow-lg: var(--box-shadow);
+
+.ub-list-head-tools-placeholder {
+    height: 2.5rem;
+}
+
+.ub-list-head-tools {
+    box-shadow: var(--box-shadow-xs);
+    background: var(--color-content-bg);
+    height: 2.5rem;
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+
+    .item {
+        flex: 1;
+
+        &.open {
+            .item-drawer-title {
+                .icon {
+                    transform: rotateZ(180deg);
+                }
+            }
+
+            .item-drawer-mask {
+                display: block !important;
+            }
+        }
+
+        .item-drawer {
+            .item-drawer-title {
+                line-height: 2.5rem;
+                text-align: center;
+
+                .text, .icon {
+                    display: inline-block;
+                }
+
+                .icon {
+                    color: var(--color-muted);
+                    transition: all 0.3s ease-in-out;
+                }
+            }
+
+            .item-drawer-mask {
+                transition: all 0.3s ease-in-out;
+                display: none;
+                position: absolute;
+                top: 2.5rem;
+                left: 0;
+                right: 0;
+                height: calc(100vh - 2.5rem);
+                background: rgba(0, 0, 0, 0.5);
+
+                .item-drawer-content {
+                    position: relative;
+                    padding-bottom: 3.75rem;
+                    background: var(--color-content-bg);
+                    border-top: 0.0625rem solid var(--color-body-line);
+
+                    &.no-foot {
+                        padding-bottom: 0;
+
+                        .item-drawer-content-body {
+                            max-height: calc(100vh - 2.5rem);
+                        }
+                    }
+
+                    .item-drawer-content-body {
+                        max-height: calc(100vh - 2.5rem - 3.75rem);
+                        overflow: auto;
+                        background: var(--color-content-bg);
+                        padding: var(--size-margin);
+                        box-shadow: inset 0 0 10px var(--color-body-line);
+
+                        .item-drawer-content-body-list {
+                            .item-drawer-content-body-item {
+                                font-size: var(--font-size);
+                                text-align: left;
+                                line-height: 2.5rem;
+                                padding: 0 1.25rem;
+                                display: flex;
+                                border-radius: var(--size-radius-sm);
+                                transition: var(--transition);
+
+                                &:hover {
+                                    background: var(--color-body-block-bg);
+                                }
+
+                                &.active {
+                                    color: var(--color-primary);
+                                    background: var(--color-primary-light-bg);
+
+                                    .checked {
+                                        visibility: visible;
+                                    }
+                                }
+
+                                .checked {
+                                    font-size: var(--font-size-large);
+                                    overflow: hidden;
+                                    visibility: hidden;
+                                    width: 1.875rem;
+                                }
+
+                                .text, .checked {
+                                    display: inline-block;
+                                    vertical-align: middle;
+                                }
+
+                                .text {
+                                    border-bottom: 0.0625rem solid var(--color-body-line);
+                                    flex: 1;
+
+                                    &:last-child {
+                                        border-bottom: none;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    .item-drawer-content-foot {
+                        display: flex;
+                        padding: var(--size-margin);
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        background: var(--color-content-bg);
+                        border-top: 0.0625rem solid var(--color-body-line);
+
+                        .btn {
+                            flex: 1;
+                            margin: 0 0.625rem;
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+// .ub-list is the same card as .ub-panel, so it is built from the panel itself:
+// a list used on its own must look identical to one wrapped in a panel, and any
+// change to .ub-panel is inherited here automatically (never restate the panel
+// chrome or the head/body padding in this file).
+.ub-list {
+    .ub-panel();
+
+    &.no-bg {
+        background-color: transparent;
+        border: none;
+        box-shadow: none;
+        margin-bottom: 0;
+
+        .head {
+            padding: 0.625rem 0;
+        }
+
+        .body {
+            margin-left: -1.25rem;
+            margin-right: -1.25rem;
+        }
+    }
+}
+
+.ub-list .body, .ub-list-items {
+    mark {
+        color: var(--color-danger);
+        background: none;
+    }
+
+    // 键盘可达性：列表内链接统一焦点环（鼠标点击不触发，避免与 hover 视觉冲突）
+    a:focus-visible {
+        outline: 0.125rem solid var(--color-primary);
+        outline-offset: 0.125rem;
+        border-radius: var(--size-radius-xs);
+    }
+
+    .item-a {
+        border-radius: var(--size-radius-sm);
+        padding: 0.625rem 0.625rem 0.625rem 4.375rem;
+        overflow: hidden;
+        margin: 0 0 0.625rem 0;
+        box-shadow: var(--box-shadow-xs);
+        background-color: var(--color-content-bg);
+        border: 0.0625rem solid var(--color-body-line);
+        transition: var(--transition);
+
+        &:hover {
+            box-shadow: var(--box-shadow-hover);
+            transform: translateY(-0.0625rem);
+        }
+
+        .icon {
+            float: left;
+            margin: 0.3125rem 0 0 -3.4375rem;
+            height: 2.5rem;
+            width: 2.5rem;
+            border-radius: var(--size-radius-sm);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            img, .img {
+                height: 2.5rem;
+                width: 2.5rem;
+                border-radius: var(--size-radius-sm);
+            }
+
+            img {
+                object-fit: contain;
+            }
+        }
+
+        .title {
+            display: block;
+            color: var(--color-heading);
+            font-size: var(--font-size-large);
+            line-height: 1.875rem;
+            height: 1.875rem;
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+
+        .summary {
+            color: var(--color-muted);
+            font-size: var(--font-size);
+            height: 1.25rem;
+            line-height: 1.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    .item-b {
+        line-height: 2em;
+        text-align: center;
+        display: block;
+        border-radius: var(--size-radius-sm);
+        margin: 0.3125rem 0;
+        color: var(--color-text);
+        background-color: var(--color-content-bg);
+        border: 0.0625rem solid var(--color-body-line);
+        box-shadow: var(--box-shadow-xs);
+        transition: var(--transition);
+
+        &:hover {
+            background-color: var(--color-body-block-bg-hover);
+            border-color: var(--color-primary-light);
+            box-shadow: var(--box-shadow-hover);
+        }
+    }
+
+    .item-c {
+        line-height: 2em;
+        display: block;
+        margin: 0.3125rem 0;
+        color: var(--color-text);
+        height: 2em;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        transition: var(--transition);
+
+        &:before {
+            // 用纯 CSS 圆点替代 "▪" 字符：不同字体下这个字符的大小/基线不一致，观感脏
+            content: '';
+            display: inline-block;
+            vertical-align: middle;
+            width: 0.375rem;
+            height: 0.375rem;
+            margin-right: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--color-primary);
+            opacity: 0.85;
+        }
+
+        &:hover {
+            color: var(--color-primary);
+        }
+    }
+
+    .item-d {
+        border-bottom: 0.0625rem dashed var(--color-body-line);
+        padding: var(--size-margin) 0;
+
+        &:hover {
+            .title {
+                color: var(--color-primary);
+            }
+        }
+
+        .title {
+            font-size: var(--font-size-large);
+            color: var(--color-heading);
+            line-height: 1.75rem;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .summary {
+            color: var(--color-muted);
+            font-size: var(--font-size);
+            padding: 0.3125rem 0 0 0;
+        }
+
+        .action {
+            display: flex;
+            padding-top: 0.3125rem;
+            color: var(--color-muted);
+
+            a {
+                color: var(--color-muted);
+            }
+
+            .left {
+                flex-grow: 1;
+            }
+
+            .right {
+
+            }
+        }
+    }
+
+    .item-e {
+        padding-bottom: 0.625rem;
+        border-radius: var(--size-radius-sm);
+        overflow: hidden;
+        border: 0.0625rem solid var(--color-body-line);
+        background: var(--color-content-bg);
+        transition: var(--transition);
+
+        &:hover {
+            box-shadow: var(--box-shadow-hover);
+            transform: translateY(-0.0625rem);
+
+            .cover {
+                transform: scale(1.05);
+            }
+
+            .title {
+                color: var(--color-primary);
+            }
+        }
+
+        .cover {
+            display: block;
+            overflow: hidden;
+            background: no-repeat center;
+            background-size: cover;
+            border-radius: var(--size-radius-sm) var(--size-radius-sm) 0 0;
+            transition: transform 0.3s ease-in-out;
+
+            &:after {
+                content: '';
+                display: block;
+                margin-top: 66.666667%;
+            }
+        }
+
+        .title {
+            line-height: 1.25rem;
+            height: 1.25rem;
+            overflow: hidden;
+            display: block;
+            margin-top: 0.625rem;
+            padding: 0 0.625rem;
+            color: var(--color-heading);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .summary {
+            margin-top: 0.3125rem;
+            line-height: 1.25rem;
+            height: 2.5rem;
+            color: var(--color-muted);
+            overflow: hidden;
+            padding: 0 0.625rem;
+        }
+    }
+
+    .item-f {
+        padding: 0 0 0 5rem;
+        margin: 0 0 0.9375rem 0;
+
+        .date {
+            float: left;
+            margin: 0 0 0 -5rem;
+            display: block;
+            width: 3.75rem;
+            border: 0.0625rem solid var(--color-primary);
+            border-radius: var(--size-radius-sm);
+            text-align: center;
+            line-height: 1.5625rem;
+            overflow: hidden;
+
+            .day {
+                color: #FFF;
+                font-size: var(--font-size-large);
+                background: var(--color-primary);
+            }
+
+            .month {
+                color: var(--color-muted);
+            }
+        }
+
+        .title {
+            display: block;
+            line-height: 1.25rem;
+            height: 1.25rem;
+            overflow: hidden;
+            color: var(--color-heading);
+        }
+
+        .summary {
+            color: var(--color-muted);
+            height: 2.5rem;
+            line-height: 1.25rem;
+            overflow: hidden;
+        }
+    }
+
+    .item-g {
+        border-radius: var(--size-radius-sm);
+        padding: 1.25rem;
+        overflow: hidden;
+        margin: 0 0 0.625rem 0;
+        text-align: center;
+        display: block;
+        background-color: var(--color-content-bg);
+        border: 0.0625rem solid var(--color-body-line);
+        transition: var(--transition);
+
+        &:hover {
+            box-shadow: var(--box-shadow-hover);
+            transform: translateY(-0.0625rem);
+        }
+
+        .icon {
+
+        }
+
+        .title {
+            display: block;
+            color: var(--color-heading);
+            margin-top: 0.625rem;
+            height: 1.25rem;
+            line-height: 1.25rem;
+            overflow: hidden;
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+    }
+
+    .item-h {
+        border: 0.0625rem solid var(--color-body-line);
+        border-radius: var(--size-radius-sm);
+        padding: 0.625rem 0.625rem 0.625rem 3.125rem;
+        overflow: hidden;
+        margin: 0 0 0.625rem 0;
+        display: block;
+        background: var(--color-content-bg);
+        transition: var(--transition);
+
+        &:hover {
+            border-color: var(--color-primary-light);
+        }
+
+        .icon {
+            float: left;
+            margin: 0 0 0 -2.5rem;
+
+            img {
+                height: 1.875rem;
+                width: 1.875rem;
+                border: none;
+                border-radius: var(--size-radius-sm);
+            }
+
+            .cover {
+                display: block;
+                width: 1.875rem;
+                height: 1.875rem;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: cover;
+                border-radius: var(--size-radius-sm);
+            }
+
+            i {
+                display: block;
+                width: 1.875rem;
+                height: 1.875rem;
+                line-height: 1.875rem;
+                text-align: center;
+                font-size: var(--font-size-large);
+                color: var(--color-muted);
+            }
+        }
+
+        .title {
+            display: block;
+            color: var(--color-heading);
+            font-size: var(--font-size);
+            line-height: 1.875rem;
+            height: 1.875rem;
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+    }
+
+    // 入口 / 侧栏类列表项：默认仍是「描边卡片」（模块市场、安全中心等页面用工具类
+    // 覆盖成卡片网格，这里必须保留背景/圆角/边框，否则会被更高优先级的本选择器吃掉）。
+    // 行式列表用变体 `.item-i-line`（见下），不破坏卡片用法。
+    .item-i {
+        border-radius: var(--size-radius-sm);
+        padding: 0.625rem 0.75rem 0.625rem 3.125rem;
+        overflow: hidden;
+        margin: 0 0 0.625rem 0;
+        display: block;
+        background-color: var(--color-content-bg);
+        border: 0.0625rem solid var(--color-body-line);
+        transition: var(--transition);
+
+        &:hover {
+            box-shadow: var(--box-shadow-hover);
+            transform: translateY(-0.0625rem);
+
+            .title {
+                color: var(--color-primary);
+            }
+        }
+
+        // 行式变体：放进白色容器里，去掉卡片外观，只留行分隔与 hover 浅底
+        &.item-i-line {
+            border: 0;
+            border-radius: 0;
+            margin: 0;
+            background-color: transparent;
+            transition: var(--transition-fast);
+
+            &:hover {
+                background-color: var(--color-body-block-bg);
+                box-shadow: none;
+                transform: none;
+            }
+        }
+
+        .right {
+            float: right;
+            color: var(--color-muted);
+            padding-left: 1.25rem;
+        }
+
+        .icon {
+            float: left;
+            margin: 0.3125rem 0 0 -2.5rem;
+            width: 1.875rem;
+            border-radius: var(--size-radius-sm);
+
+            img {
+                height: 1.875rem;
+                width: 1.875rem;
+                border: none;
+                border-radius: var(--size-radius-sm);
+            }
+
+            i {
+                display: block;
+                width: 1.875rem;
+                height: 1.875rem;
+                line-height: 1.875rem;
+                text-align: center;
+                font-size: var(--font-size-large);
+                color: var(--color-muted);
+            }
+        }
+
+        .title {
+            display: block;
+            color: var(--color-heading);
+            font-size: var(--font-size);
+            line-height: 1.25rem;
+            height: 1.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            // 单行省略必须配 nowrap，否则长标题会换行后被固定高度裁掉半行
+            white-space: nowrap;
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+
+        .desc {
+            color: var(--color-muted);
+            font-size: 0.75rem;
+            line-height: 1.25rem;
+            // 描述两行封顶：固定单行高会把一句中文从中间裁断（只剩半句）
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            max-height: 2.5rem;
+            text-overflow: ellipsis;
+        }
+    }
+
+    // 行式变体的行分隔：独立一条相邻兄弟规则（写进 .item-i 嵌套里会被 less
+    // 展开成「完整路径 + 完整路径」导致永不匹配）
+    .item-i.item-i-line + .item-i.item-i-line {
+        border-top: 0.0625rem solid var(--color-body-line);
+    }
+
+    .item-j {
+        border: 0.0625rem solid var(--color-body-line);
+        border-radius: var(--size-radius-sm);
+        padding: 0.625rem;
+        overflow: hidden;
+        margin: 0 0 0.625rem 0;
+        display: block;
+        color: var(--color-muted);
+        background: var(--color-content-bg);
+        transition: var(--transition);
+
+        &:hover {
+            border-color: var(--color-primary-light);
+        }
+
+        .status {
+            float: right;
+            line-height: 1.25rem;
+            color: var(--color-muted);
+        }
+
+        .title {
+            display: block;
+            color: var(--color-heading);
+            font-size: var(--font-size);
+            line-height: 1.25rem;
+            height: 1.25rem;
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+
+        .attr {
+            padding: 0.625rem 0 0 0;
+            font-size: var(--font-size);
+
+            .line {
+                line-height: 1.2188rem;
+            }
+        }
+    }
+
+    .item-k {
+        padding: 0.625rem 0.625rem 0.625rem 13.125rem;
+        overflow: hidden;
+        border-radius: var(--size-radius-sm);
+        background: var(--color-content-bg);
+        // 白底卡片压在浅色页面上时看不出边界、相邻条目会连成一片，
+        // 用 1px 内嵌发丝线把每张卡片圈出来（不占布局、不产生位移）
+        box-shadow: var(--shadow-inset);
+        transition: var(--transition);
+
+        // 头像行（帖子 / 评论 / 文章列表用）：头像 + 标题/元信息两列网格。
+        // 行不再各自成卡：卡片外观交给外层容器，行与行之间只留一条发丝分隔线，
+        // 避免"容器白卡 + 行白卡 + 手写 1px 分隔线"三层分隔叠在一起。
+        &.item-k-a {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            column-gap: 0.75rem;
+            align-items: center;
+            padding: 0.8125rem 1rem;
+            margin: 0;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            // 用 border-bottom 而不是「相邻选择器 + 最后一项清除」：列表行有时被
+            // col-md-12 之类的 wrapper 包着，相邻选择器会失效，:last-child 又会让
+            // 每一行都算最后一项；底线留在最后一行只是多一条发丝线，紧贴容器底边。
+            border-bottom: 0.0625rem solid var(--color-body-line);
+
+            &:hover {
+                background: var(--color-body-block-bg);
+                box-shadow: none;
+            }
+
+            .image {
+                grid-row: 1 / span 2;
+                align-self: start;
+                width: 2.5rem;
+                height: 2.5rem;
+                // 清掉桌面端 float + 负 margin 的"塞进 padding"定位
+                float: none;
+                margin-left: 0;
+                margin-top: 0.125rem;
+
+                .cover {
+                    border-radius: var(--size-radius-full);
+                    box-shadow: none;
+                }
+            }
+
+            .title {
+                grid-column: 2;
+                align-self: end;
+                // 两行封顶：单行 nowrap 在窄容器里会被硬裁，还会压到下面的元信息行
+                font-size: var(--font-size-medium);
+                font-weight: 600;
+                line-height: 1.45;
+                white-space: normal;
+                overflow-wrap: anywhere;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+
+                .ub-tag {
+                    margin-right: 0.25rem;
+                    vertical-align: middle;
+                }
+            }
+
+            .info {
+                grid-column: 2;
+                align-self: start;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 0.125rem 0.75rem;
+                padding-top: 0.5rem;
+                font-size: var(--font-size-small);
+                color: var(--color-muted);
+
+                .left, .right {
+                    float: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.25rem;
+                }
+
+                .right {
+                    margin-left: auto;
+                }
+
+                .iconfont {
+                    font-size: 0.875rem;
+                    line-height: 1;
+                }
+            }
+        }
+
+        &.item-k-b {
+            padding: 0.3125rem 0.3125rem 0.3125rem 3.75rem;
+            margin: 0.25rem 0;
+            &:first-child, &:last-child {
+                margin-top: 0;
+            }
+
+            .image {
+                width: 2.5rem;
+                height: 2.5rem;
+                margin-left: -3.125rem;
+
+                .cover {
+                    box-shadow: var(--box-shadow-xs);
+                }
+            }
+
+            .title {
+                font-size: var(--font-size);
+                padding: 0.3125rem 0;
+                display: block;
+                padding: 0.625rem 0;
+                line-height: 1.25rem;
+            }
+
+            .right {
+                padding: 0 0.3125rem;
+                height: 2.5rem;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        &:hover {
+            box-shadow: var(--shadow-inset), var(--box-shadow-xs);
+
+            .image {
+                .cover {
+                    transform: scale(1.05);
+                }
+            }
+
+            .title {
+                color: var(--color-primary);
+            }
+        }
+
+        .right {
+            float: right;
+        }
+
+        .image {
+            width: 11.25rem;
+            float: left;
+            margin-left: -12.5rem;
+            display: block;
+            overflow: hidden;
+            border-radius: var(--size-radius-sm);
+
+            .cover {
+                border-radius: var(--size-radius-sm);
+                transition: transform 0.6s ease-in-out;
+            }
+        }
+
+        .title {
+            font-size: var(--font-size-large);
+            color: var(--color-heading);
+            // 大字号标题用常规字重在中文里显得发散，加半粗更聚焦
+            font-weight: 600;
+            line-height: 1.2;
+            display: block;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .summary {
+            // 正文摘要用二级文字色（--color-muted 过浅，三行摘要在浅底上几乎读不清）
+            color: var(--color-tertiary);
+            font-size: var(--font-size);
+            padding: 0.5rem 0 0 0;
+            height: 4.1563rem;
+            overflow: hidden;
+            line-height: 1.2188rem;
+            display: block;
+            overflow: hidden;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            display: -webkit-box;
+        }
+
+        .info {
+            color: var(--color-muted);
+            font-size: var(--font-size);
+            // 原来是 1.25rem，摘要与信息行之间会空出一大段
+            padding: 0.75rem 0 0 0;
+            overflow: hidden;
+            display: block;
+
+            .left {
+                float: left;
+            }
+
+            .right {
+                float: right;
+            }
+
+            a {
+                color: var(--color-tertiary);
+
+                &:hover {
+                    text-decoration: underline;
+                    color: var(--color-primary);
+                }
+            }
+        }
+
+    }
+
+    .item-l {
+        line-height: 2em;
+        display: block;
+        position: relative;
+        height: 1.875rem;
+        overflow: hidden;
+        padding-left: 2.5rem;
+        padding-right: 7em;
+        box-sizing: content-box;
+
+        .seq {
+            position: absolute;
+            width: 1.25rem;
+            height: 1.25rem;
+            left: 0;
+            top: 0.25em;
+            background: var(--color-danger-light);
+            cursor: pointer;
+            line-height: 1.25rem;
+            text-align: center;
+            color: var(--color-danger);
+            display: block;
+            border-radius: var(--size-radius-sm);
+        }
+
+        .right {
+            position: absolute;
+            right: 0;
+            top: 0;
+            color: var(--color-text);
+            width: 6em;
+            text-align: center;
+            background: var(--color-body-block-bg);
+            border-radius: var(--size-radius-sm);
+        }
+
+        .title {
+            color: var(--color-primary);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            display: block;
+            height: 1.25rem;
+            overflow: hidden;
+        }
+    }
+
+    .item-m {
+        color: var(--color-muted);
+        background-color: var(--color-body-block-bg);
+        height: 1.875rem;
+        line-height: 1.875rem;
+        overflow: hidden;
+        padding: 0 0.25rem;
+        display: -moz-box;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        display: block;
+        margin: 0.125rem -0.2344rem;
+        border-radius: var(--size-radius-sm);
+        transition: var(--transition);
+
+        &:hover {
+            background: var(--color-primary);
+            color: #FFF;
+        }
+    }
+
+    .item-n {
+        margin-bottom: 1.25rem;
+        transition: all 0.3s ease-in-out;
+
+        &:hover {
+            transform: translateY(-0.3125rem);
+            background: var(--color-content-bg);
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        .image {
+            .cover {
+                border-radius: var(--size-radius-sm);
+            }
+        }
+
+        .text {
+            .cover {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--size-radius-sm);
+
+                .content {
+                    color: var(--color-heading);
+                    text-shadow: 0 0 10px var(--color-body-block-bg);
+                    font-size: 1.25rem;
+                }
+            }
+        }
+    }
+
+    .item-o {
+        background: var(--color-content-bg);
+        margin-bottom: 0.625rem;
+        border-radius: var(--size-radius-sm);
+        overflow: hidden;
+
+        &:hover {
+            .image {
+                .cover {
+                    transform: scale(1.1);
+                    transition: all 0.6s;
+                }
+            }
+        }
+
+        .image {
+            display: block;
+            background: var(--color-content-bg);
+            overflow: hidden;
+        }
+
+        .title {
+            display: block;
+            font-size: var(--font-size-large);
+            display: block;
+            color: var(--color-primary);
+            border-top: 0.3125rem solid var(--color-primary);
+            background: var(--color-content-bg);
+            line-height: 2.5rem;
+            padding: 0 1.25rem;
+            position: relative;
+
+            &:after {
+                content: '>';
+                display: block;
+                transform: scaleX(0.6);
+                font-weight: bold;
+                position: absolute;
+                right: 1.25rem;
+                top: 0;
+                height: 2.5rem;
+                font-size: var(--font-size-large);
+            }
+        }
+    }
+
+    .item-p {
+        border-radius: var(--size-radius-sm);
+        margin-bottom: 0.625rem;
+        background: var(--color-content-bg);
+        padding: 0 0 1.25rem 0;
+        box-shadow: var(--box-shadow-xs);
+        border: 0.0625rem solid var(--color-body-line);
+        transition: var(--transition);
+
+        &:hover {
+            box-shadow: var(--box-shadow-hover);
+            transform: translateY(-0.0625rem);
+
+            .image {
+                .cover {
+                    transform: scale(1.1);
+                }
+            }
+        }
+
+        .image {
+            display: block;
+            overflow: hidden;
+            border-radius: var(--size-radius-sm) var(--size-radius-sm) 0 0;
+
+            .cover {
+                border-radius: var(--size-radius-sm) var(--size-radius-sm) 0 0;
+                transition: transform 0.6s;
+            }
+        }
+
+        .title {
+            font-size: var(--font-size);
+            text-align: center;
+            padding: 0.625rem;
+            display: block;
+            color: var(--color-heading);
+            height: 2.5rem;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+
+        .summary {
+            display: block;
+            color: var(--color-muted);
+            text-align: center;
+            height: 1.25rem;
+            line-height: 1.25rem;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            padding: 0 0.625rem;
+            cursor: default;
+
+            &.line2 {
+                height: 2.5rem;
+                white-space: normal;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                display: -webkit-box;
+            }
+        }
+    }
+
+    .item-video {
+        position: relative;
+        display: block;
+        margin: 0.625rem;
+        border-radius: var(--size-radius-sm);
+
+        img {
+            width: 100%;
+        }
+
+        .mask {
+            border-radius: var(--size-radius-sm);
+            position: absolute;
+            background: rgba(0, 0, 0, 0.2);
+            text-align: center;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            color: #FFF;
+            font-size: 3.75rem;
+
+            .box {
+                display: table;
+                height: 100%;
+                width: 100%;
+
+                i {
+                    vertical-align: middle;
+                    display: table-cell;
+                }
+            }
+        }
+    }
+
+    .item-video-cover {
+        background-color: var(--color-content-bg);
+        margin: 0 0 0.625rem 0;
+        border-radius: var(--size-radius);
+        overflow: hidden;
+        transition: box-shadow 0.3s;
+
+        &.vertical {
+            .cover {
+                &:after {
+                    margin-top: 151%;
+                }
+            }
+        }
+
+        &:hover {
+            box-shadow: var(--box-shadow-hover);
+
+            .cover {
+                transform: scale(1.05);
+
+                .mask-text {
+                    transform: scale(0.95);
+                }
+            }
+
+            .title {
+                color: var(--color-primary);
+            }
+        }
+
+        .cover {
+            display: block;
+            overflow: hidden;
+            background: no-repeat center;
+            background-size: cover;
+            border-radius: var(--size-radius) var(--size-radius) 0 0;
+            transition: transform 0.3s ease-in-out;
+            position: relative;
+
+            &:after {
+                content: '';
+                display: block;
+                margin-top: 66.666667%;
+            }
+
+            .mask-text {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.1);
+                padding: 0.3125rem;
+                color: #FFF;
+                text-align: center;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                transition: all 0.3s;
+            }
+
+        }
+
+        .title {
+            line-height: 1.25rem;
+            height: 1.875rem;
+            overflow: hidden;
+            display: block;
+            color: var(--color-heading);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            width: 100%;
+            padding: 0.3125rem 0.625rem;
+        }
+
+        .category {
+            padding: 0.3125rem 0.625rem;
+
+            .stat {
+                float: right;
+
+                a {
+                    margin-left: var(--size-margin);
+                }
+            }
+
+            a {
+                color: var(--color-muted);
+
+                i {
+                    display: inline-block;
+                    width: 1em;
+                    text-align: center;
+                }
+
+                &:hover {
+                    color: var(--color-primary);
+                }
+            }
+        }
+    }
+
+    .item-video-cover-a {
+        padding: var(--size-margin);
+        margin: 0 0 0.625rem 0;
+
+        &:hover {
+            .cover {
+                transform: scale(1.07);
+                transition: all 0.3s;
+            }
+        }
+
+        .cover {
+            display: block;
+            border-radius: var(--size-radius);
+            position: relative;
+
+            .time {
+                position: absolute;
+                display: block;
+                bottom: 0.625rem;
+                right: 1.25rem;
+                color: #FFF;
+                text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+                font-size: var(--font-size-small);
+            }
+        }
+
+        .user {
+            display: block;
+            height: 2.75rem;
+            margin-top: -0.625rem;
+            margin-left: 1.25rem;
+            position: relative;
+
+            .avatar {
+                width: 2.25rem;
+                height: 2.25rem;
+                display: inline-block;
+
+                .image {
+                    width: 2.25rem;
+                    height: 2.25rem;
+                    border: 0.125rem solid #FFF;
+                    border-radius: 50%;
+
+                }
+            }
+
+            .name {
+                display: inline-block;
+                vertical-align: bottom;
+                color: var(--color-heading);
+            }
+        }
+
+        .title {
+            line-height: 1.25rem;
+            height: 2.5rem;
+            overflow: hidden;
+            display: block;
+            color: var(--color-heading);
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .info {
+            font-size: var(--font-size-small);
+            color: var(--color-muted);
+            padding-top: 0.625rem;
+        }
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-list .body, .ub-list-items {
+        .item-k {
+            padding: 0.625rem 0.625rem 0.625rem 6.25rem;
+
+            .title {
+                font-size: var(--font-size);
+            }
+
+            .image {
+                width: 5rem;
+                margin-left: -5.625rem;
+            }
+
+            .summary {
+                font-size: var(--font-size-small);
+                padding-top: 0.3125rem;
+                height: 2.5rem;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-list .body, .ub-list-items {
+        .item-video-cover {
+            &:hover {
+                transform: none;
+            }
+        }
+    }
+
+    .ub-list {
+        max-width: 100%;
+        overflow: hidden;
+
+
+        &.no-bg {
+            .head {
+                padding: 0.625rem;
+            }
+
+            .body {
+
+            }
+        }
+    }
+}
+
+.ub-list-pay {
+
+    &.disabled {
+        .item {
+            &:hover {
+                border-color: var(--color-body-line);
+            }
+        }
+    }
+
+    &.inlined {
+        background: var(--color-body-block-bg);
+        border-radius: var(--size-radius-sm);
+        padding: 0.625rem;
+
+        .item {
+            display: inline-block;
+            min-width: 10rem;
+            line-height: 1.875rem;
+            cursor: default;
+            border: 0.0625rem solid var(--color-body-line);
+            padding: 0.375rem 0.625rem;
+            background: var(--color-content-bg);
+            border-radius: var(--size-radius-sm);
+        }
+    }
+
+    .item {
+        line-height: 3.125rem;
+        border: 0.0625rem solid var(--color-body-line);
+        padding: 0 10px;
+        border-radius: var(--size-radius-sm);
+        text-align: left;
+        color: var(--color-text);
+        display: block;
+        margin-bottom: 0.625rem;
+        background: var(--color-content-bg);
+        transition: var(--transition);
+
+        &.active {
+            border-color: var(--color-primary);
+            background: var(--color-primary-light-bg);
+        }
+
+        &:hover {
+            border-color: var(--color-primary);
+            box-shadow: var(--box-shadow-xs);
+        }
+
+        .icon {
+            width: 1.875rem;
+            height: 1.875rem;
+            vertical-align: middle;
+            margin-right: 0.25rem;
+        }
+    }
+}

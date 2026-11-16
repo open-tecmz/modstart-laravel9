@@ -1,0 +1,129 @@
+.ub-video-container {
+    background: #1b1e32;
+}
+
+.ub-video {
+    display: flex;
+    background: #151728;
+
+    &.full-page {
+        .side {
+            display: none;
+        }
+    }
+
+    .main {
+        flex: 1;
+        width: 0;
+
+        .player-box {
+            width: 100%;
+            position: relative;
+            display: block;
+            overflow: hidden;
+            border-radius: var(--size-radius);
+
+            &:after {
+                content: '';
+                display: block;
+                margin-top: 56.25%;
+                height: 0;
+            }
+
+            .player-info {
+                position: absolute;
+                inset: 0;
+                background: var(--color-mask);
+                color: var(--color-text-reverse);
+                display: flex;
+                justify-content: center;
+                item-align: center;
+                flex-direction: column;
+                text-align: center;
+                z-index: 1000;
+                border-radius: var(--size-radius);
+
+                .player-info-body {
+                }
+            }
+
+            .player {
+                height: 100%;
+                width: 100%;
+                position: absolute;
+                inset: 0;
+
+                .iframe {
+                    width: 100% !important;
+                    height: 100% !important;
+                }
+
+                .player-iframe-mask {
+                    width: 100% !important;
+                    height: 100% !important;
+                    position: relative;
+                    overflow: hidden;
+
+                    iframe {
+                        width: 900px;
+                        height: 500px;
+                    }
+                }
+            }
+        }
+
+        .tool-box {
+            background: #0f111d;
+            padding: 0.625rem;
+            height: 2.5rem;
+
+            .item {
+                color: var(--color-tertiary-light);
+                display: inline-block;
+                line-height: 1.25rem;
+                margin-right: 0.625rem;
+                height: 1.25rem;
+                transition: var(--transition);
+                cursor: pointer;
+
+                &:hover {
+                    color: var(--color-text-reverse);
+                }
+            }
+        }
+    }
+
+    .side {
+        width: 12.5rem;
+        flex-shrink: 0;
+        position: relative;
+
+        .side-container {
+            position: absolute;
+            inset: 0;
+            overflow: auto;
+            color: rgb(156, 162, 172);
+            --color-scrollbar-bg: #1b1e32;
+        }
+    }
+}
+
+
+@media screen and (max-width: 50rem) {
+    .ub-video {
+        flex-direction: column;
+        height: auto;
+
+        .main {
+            width: 100%;
+        }
+
+        .side {
+            width: 100%;
+
+            .side-container {
+                position: relative;
+            }
+        }
+    }
+}

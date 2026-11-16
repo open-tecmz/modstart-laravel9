@@ -1,0 +1,171 @@
+
+.ub-page {
+  .pages {
+    text-align: center;
+    padding: 1em 0;
+
+    a, span, input, button {
+      display: inline-block;
+      line-height: 1.875rem;
+      min-width: 1.875rem;
+      text-align: center;
+      padding: 0 0.3125rem;
+      color: var(--color-body-block);
+      margin: 0 0.3125rem 0.3125rem 0.3125rem;
+      vertical-align: bottom;
+      border: 0.0625rem solid var(--color-body-line);
+      border-radius: var(--size-radius-sm);
+      text-decoration: none;
+      background: var(--color-content-bg);
+      transition: var(--transition);
+    }
+
+    a.page:hover {
+      color: var(--color-primary);
+      border-color: var(--color-primary-light);
+      background: var(--color-primary-light-bg);
+    }
+
+    span.current {
+      color: var(--color-text-reverse);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    span.more {
+      background: transparent;
+      border-color: transparent;
+      color: inherit;
+    }
+
+    .jumpBox {
+      position: relative;
+      border: 0.0625rem solid var(--color-body-line);
+      border-radius: var(--size-radius-sm);
+      padding: 0;
+      overflow: hidden;
+
+      input {
+        width: 4em;
+        line-height: 1.25rem;
+        outline: none;
+        margin: 0;
+        float: left;
+        border: none;
+        text-align: center;
+        background: var(--color-content-bg);
+        height: 1.25rem;
+      }
+
+      button {
+        width: 4em;
+        background: var(--color-content-bg);
+        margin: 0;
+        right: 0;
+        float: left;
+        border: none;
+        border-left: 0.0625rem dotted var(--color-body-line);
+        outline: none;
+
+        &:hover {
+          color: var(--color-primary);
+        }
+      }
+    }
+  }
+}
+
+.ub-paginate-mobile {
+  /* #ifndef APP-NVUE */
+  display: flex;
+  /* #endif */
+  position: relative;
+  overflow: hidden;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.ub-paginate-mobile__btn {
+  /* #ifndef APP-NVUE */
+  display: flex;
+  /* #endif */
+  width: 30%;
+  height: 30px;
+  line-height: 30px;
+  font-size: var(--font-size);
+  position: relative;
+  background-color: var(--color-body-block-bg);
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-body-line);
+  /* #ifdef H5 */
+  cursor: pointer;
+  /* #endif */
+  border-radius: var(--size-radius-sm);
+  transition: var(--transition);
+}
+
+.ub-paginate-mobile__child-btn {
+  /* #ifndef APP-NVUE */
+  display: flex;
+  /* #endif */
+  font-size: var(--font-size);
+  position: relative;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.ub-paginate-mobile__num {
+  /* #ifndef APP-NVUE */
+  display: flex;
+  /* #endif */
+  flex: 1;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
+  line-height: 30px;
+  font-size: var(--font-size);
+  color: var(--color-text);
+}
+
+.ub-paginate-mobile__num-page {
+  /* #ifndef APP-NVUE */
+  display: flex;
+  /* #endif */
+  flex-direction: row;
+}
+
+.ub-paginate-mobile__num-page-text {
+  font-size: var(--font-size);
+
+  &.current {
+    color: var(--color-primary);
+  }
+}
+
+.ub-paginate-mobile--enabled {
+  color: var(--color-heading);
+  opacity: 1;
+}
+
+.ub-paginate-mobile--disabled {
+  opacity: 0.3;
+  color: var(--color-muted);
+  /* #ifdef H5 */
+  cursor: not-allowed;
+  /* #endif */
+}
+
+.ub-paginate-mobile--hover {
+  color: var(--color-text-reverse);
+  background-color: var(--color-primary);
+  border-radius: var(--size-radius-sm);
+}

@@ -1,0 +1,375 @@
+body {
+    min-height: 100%;
+    font-family: var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif);
+    line-height: 1.5;
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+[data-theme="light"] {
+
+    .ub-panel-frame {
+        &.left-toggle {
+
+            &:not(.left-hover) .left .menu {
+                & > .menu-item:not(:has(.children)) > .title {
+                    padding-left: 0;
+                }
+            }
+
+            @media (max-width: 800px) {
+                &:not(.left-hover) .left .menu {
+                    & > .menu-item:not(:has(.children)) > .title {
+                        padding-left: 0.9375rem;
+                    }
+                }
+            }
+        }
+
+        .left {
+
+            .menu {
+                .menu-item {
+
+                    & > .title {
+                        transition: color 0s;
+                    }
+
+                    &:not(:has(.children)) {
+                        background-color: var(--panel-menu-background);
+                        border-right: none;
+
+                        & > .title {
+                            &:hover {
+                                color: var(--color-primary);
+                            }
+                        }
+
+                        &.active {
+                            // 高亮只由内层药丸承担：行本身不铺色、不加右侧 3px 饱和蓝条与主色光晕。
+                            // 注意 panel.less 的 `.menu-item.active:not(:has(.children))` 比本文件同段规则更具体，
+                            // 会把整行铺成淡蓝（药丸同色被吃掉）并在最右侧贴一条亮蓝，所以这里必须显式覆盖。
+                            background-color: transparent;
+                            border-right: none;
+                            box-shadow: none;
+
+                            & > .title {
+                                // 用面板菜单自己的激活态令牌（浅色主题 = --color-primary-light-bg + 主色文字）。
+                                // 不要用 --color-primary-gradient-bg：那是首屏 hero 的"墨色深端"渐变（§6.18），
+                                // 放在侧栏菜单项上会变成"深蓝 → 亮蓝"的刺眼实色条，与设计系统 §6.3 / §6.9 冲突。
+                                // 药丸背景改由下方 .title:before 承担，这里只负责文字颜色。
+                                background: transparent;
+                                color: var(--panel-menu-active-color);
+                                // 这里不要写 transition：本文件里 `.menu-item > .title { transition: color 0s }`
+                                // 就是刻意关掉 panel.less 的 `transition: var(--transition)`，避免点击菜单切换
+                                // active 时药丸"闪烁回弹"一下。若在此处声明 transition，选择器更具体会把那条覆盖掉。
+                                transition: none;
+                            }
+                        }
+                    }
+                }
+
+                // ---------------------------------------------------------------------
+                // 内缩圆角"药丸"：hover 与 active 共用同一个盒子（左右内缩 0.625rem、
+                // 上下各留 0.1875rem、圆角 --size-radius-sm）。
+                // 用绝对定位的 ::before 画在标题下层，而不是给标题加 margin —— 这样标题始终占满整行：
+                //   ① 文字与右侧展开箭头在任何状态下都不会发生位移（不跳动）；
+                //   ② hover 与 active 的盒子完全一致，不再出现"hover 整行、active 内缩"的割裂感。
+                // ---------------------------------------------------------------------
+                .title {
+                    &:before {
+                        content: '';
+                        position: absolute;
+                        left: 0.625rem;
+                        right: 0.625rem;
+                        top: 0.1875rem;
+                        bottom: 0.1875rem;
+                        border-radius: var(--size-radius-sm);
+                        background: transparent;
+                        // 不要给药丸加 transition：本文件 `.menu-item > .title { transition: color 0s }`
+                        // 就是刻意关掉切换动画的。加了之后点击菜单切换 active 时，
+                        // 药丸背景（透明 ↔ 激活色）会补间播放，表现为"闪烁回弹"。
+                        transition: none;
+                        pointer-events: none;
+                    }
+
+                    // 文字 / 图标 / 箭头浮在药丸之上
+                    > .icon,
+                    > .text {
+                        position: relative;
+                        z-index: 1;
+                    }
+
+                    > .arrow {
+                        z-index: 1;
+                    }
+
+                    // 覆盖 panel.less 的整行 hover 底色，改用内缩药丸
+                    &:hover {
+                        background: transparent;
+
+                        &:before {
+                            background: var(--panel-menu-hover-background);
+                        }
+                    }
+                }
+
+                .menu-item.active:not(:has(.children)) > .title:before {
+                    // 激活态药丸：叶子菜单项（各层级）统一使用；父级（含子菜单）只高亮文字、不铺药丸
+                    background: var(--panel-menu-active-background);
+                }
+            }
+        }
+
+    }
+}
+
+.ub-admin-login {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    flex-direction: column;
+    // 背景氛围光晕（与前台登录页一致），避免大面积纯底色显得空
+    background-color: var(--color-body-bg);
+    background-image:
+        radial-gradient(48rem 28rem at 50% -8rem, var(--color-primary-glow), transparent 70%),
+        radial-gradient(36rem 24rem at 92% 108%, var(--color-primary-soft), transparent 72%);
+    background-repeat: no-repeat;
+
+    .login-box {
+        display: flex;
+        width: 41.25rem;
+        border: 0.0625rem solid var(--color-body-line);
+        border-radius: var(--size-radius);
+        box-shadow: var(--box-shadow-lg);
+
+        .info {
+            flex: 0 0 45%;
+            // 墨色主导的纵向渐变：亮色收在右下角，避免整栏高饱和
+            --ub-admin-login-info-gradient: linear-gradient(160deg, var(--color-ink-bg) 0%, var(--color-primary-dark) 62%, var(--color-primary) 100%);
+            background-color: var(--color-primary);
+            border-radius: var(--size-radius) 0 0 var(--size-radius);
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 1.5rem;
+            color: var(--color-text-reverse);
+            text-align: center;
+            background-image: url('../../image/admin-login.svg'), var(--ub-admin-login-info-gradient);
+            background-position: center bottom, center;
+            background-size: contain, cover;
+            background-repeat: no-repeat, no-repeat;
+            justify-content: start;
+
+            .title {
+                font-size: 1.375rem;
+                line-height: 1.75rem;
+                font-weight: 600;
+                letter-spacing: 0.01em;
+                overflow-wrap: anywhere;
+
+                .iconfont {
+                    font-size: 1.25rem;
+                }
+            }
+
+            .slogan {
+                font-size: var(--font-size);
+                margin-top: 0.5rem;
+                letter-spacing: 0.02em;
+                opacity: 0.78;
+            }
+        }
+
+        .form {
+            background: var(--color-content-bg);
+            padding: 1.5rem;
+            width: 55%;
+            border-radius: 0 var(--size-radius) var(--size-radius) 0;
+            flex-shrink: 0;
+
+            .line {
+                padding: 0.75rem 0.625rem;
+                color: var(--color-tertiary);
+                font-size: var(--font-size-small);
+                font-weight: 500;
+
+                .iconfont {
+                    margin-right: 0.375rem;
+                    font-size: 1rem;
+                    color: var(--color-muted);
+                    vertical-align: -0.125rem;
+                }
+
+                input {
+                    width: 100%;
+
+                    &.form-lg {
+                        margin-top: 0.5rem;
+                    }
+
+                    // 基础样式中 input:hover 优先级高于 input:focus，此处补回聚焦态
+                    &:focus {
+                        border-color: var(--color-primary);
+                        box-shadow: 0 0 0 0.1875rem var(--color-focus-ring);
+                    }
+                }
+
+                // 验证码源图 160:46，等比缩放并右对齐，避免被列宽拉伸变形
+                .captcha {
+                    display: block;
+                    width: auto;
+                    max-width: 100%;
+                    // 与同排 input.form-lg 的 margin-top 保持一致（同一行标签到控件的间距），
+                    // 否则图片会贴着行顶、比输入框高出约 0.5rem
+                    margin-top: 0.5rem;
+                    margin-left: auto;
+                }
+            }
+        }
+    }
+
+    .btn {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        border-radius: var(--size-radius-sm);
+
+        &.btn-lg {
+            height: 2.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            box-shadow: var(--box-shadow-xs);
+        }
+
+        &.btn-lg:hover:not(.disabled) {
+            box-shadow: var(--box-shadow);
+        }
+
+        &:hover, &:active, &:focus {
+            background: var(--color-primary-dark);
+            border-color: var(--color-primary-dark);
+        }
+    }
+}
+
+@media (max-width: 800px) {
+    .ub-admin-login {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        min-height: 100vh;
+        background: var(--color-content-bg);
+
+        .login-box {
+            display: block;
+            flex: 0 0 auto;
+            border: 0;
+            border-radius: 0;
+            width: 100%;
+            box-shadow: none;
+
+            .info {
+                border-radius: 0;
+                text-align: left;
+                // 窄高度横幅内插画会被裁切，改用柔和光晕
+                background-image:
+                    radial-gradient(20rem 8rem at 100% 0%, var(--color-primary-glow), rgba(255, 255, 255, 0) 70%),
+                    var(--ub-admin-login-info-gradient);
+                background-size: auto, cover;
+                background-position: center, center;
+                padding: 1.875rem 1.5rem;
+            }
+
+            .form {
+                width: 100%;
+                border-radius: 0;
+            }
+        }
+
+        // 备案/页脚贴底，避免表单下方留下大段空白
+        > .tw-text-center {
+            margin-top: auto;
+        }
+
+        .form .line input.form-lg,
+        .form .btn,
+        .form .captcha {
+            min-height: 2.75rem;
+        }
+    }
+}
+
+#adminMainPage {
+    height: 100%;
+
+    &.hidden {
+        display: none;
+    }
+}
+
+#adminTabPage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-body-bg);
+
+    &.hidden {
+        display: none;
+    }
+
+    // 标签页 iframe 未渲染完成时的加载态（SPA 后台「精密极简」风）
+    .tab-page-loading {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.875rem;
+        // 主色氛围光晕：替代大面积实色块，与设计系统一致（克制的 soft 级）
+        background: radial-gradient(circle at 50% 46%, var(--color-primary-soft), transparent 34%);
+        pointer-events: none;
+
+        .spinner {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            border: 0.1875rem solid var(--color-tertiary-light);
+            border-top-color: var(--color-primary);
+            animation: adminTabLoadingSpin 0.9s linear infinite;
+        }
+
+        .text {
+            color: var(--color-muted);
+            font-size: var(--font-size);
+            letter-spacing: 0.08em;
+        }
+    }
+
+    iframe {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+
+        &.hidden {
+            left: -200%;
+            top: -200%;
+        }
+    }
+}
+
+@keyframes adminTabLoadingSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}

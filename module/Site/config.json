@@ -1,0 +1,17 @@
+{
+    "name": "Site",
+    "title": "基本设置",
+    "env": [
+        "laravel5",
+        "laravel9",
+        "laravel13"
+    ],
+    "require": [
+        "Vendor:>=1.5.0"
+    ],
+    "version": "1.8.0",
+    "modstartVersion": ">=6.0.0",
+    "author": "ModStart",
+    "description": "配置网站名称、关键词、描述、备案信息、主题等配置",
+    "config": []
+}

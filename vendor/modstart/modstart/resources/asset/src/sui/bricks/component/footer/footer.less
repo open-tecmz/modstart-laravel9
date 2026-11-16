@@ -1,0 +1,162 @@
+
+.ub-footer {
+    text-align: center;
+    padding: 1.875rem 0;
+    margin-top: 1.25rem;
+    background: var(--color-body-bg);
+    border-top: 0.0625rem solid var(--color-body-line);
+
+    .nav {
+        padding: 0.625rem 0;
+
+        a {
+            color: var(--color-tertiary);
+            display: inline-block;
+            margin: 0 0.3125rem;
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+    }
+
+    .copyright {
+        color: var(--color-tertiary);
+
+        a {
+            color: var(--color-tertiary);
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-primary);
+            }
+        }
+    }
+}
+
+.ub-footer-a {
+    text-align: center;
+    padding: 1.875rem 0;
+    // 与顶部导航一致的深色"墨"质感，替代大面积主色渐变
+    background-color: var(--color-ink-bg);
+    background-image: radial-gradient(40rem 14rem at 12% 0%, var(--color-primary-glow), rgba(15, 23, 42, 0) 70%);
+    background-repeat: no-repeat;
+    margin-top: 1.25rem;
+
+    .nav {
+        padding: 0.625rem 0;
+
+        a {
+            color: var(--color-ink-text);
+            display: inline-block;
+            margin: 0 0.3125rem;
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-ink-heading);
+            }
+        }
+    }
+
+    .copyright {
+        color: var(--color-ink-text);
+
+        a {
+            color: var(--color-ink-text);
+            transition: var(--transition);
+
+            &:hover {
+                color: var(--color-ink-heading);
+            }
+        }
+    }
+}
+
+.ub-footer-link {
+
+    padding: 2.5rem 0;
+
+    a {
+        color: var(--color-tertiary);
+        transition: var(--transition);
+
+        &:hover {
+            color: var(--color-primary);
+        }
+    }
+
+    &.reverse {
+        background: var(--color-ink-bg);
+        color: var(--color-ink-text);
+
+        a {
+            color: var(--color-ink-text);
+
+            &:hover {
+                color: var(--color-ink-heading);
+            }
+        }
+
+        .line {
+            background-color: var(--color-body-block-bg);
+            opacity: 0.25;
+        }
+    }
+
+    .link {
+        padding: 1.25rem 0;
+
+        .title {
+            font-size: 1.25rem;
+            color: var(--color-heading);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .list {
+            a {
+                margin: 0.625rem 0;
+                display: block;
+            }
+        }
+    }
+
+    .content {
+        padding: 1.25rem 0;
+    }
+
+    .line {
+        height: 0.0625rem;
+        background: var(--color-body-line);
+        margin: 1.25rem 0;
+        border: none;
+    }
+
+    .nav {
+        padding: 0.625rem 0;
+        text-align: center;
+
+        a {
+            margin: 0 0.3125rem;
+        }
+    }
+
+    .copyright {
+        text-align: center;
+        color: var(--color-tertiary);
+    }
+}
+
+@media screen and (max-width: 50rem) {
+    .ub-footer-link {
+        .link {
+            text-align: left;
+            padding: 1.25rem;
+        }
+
+        .image {
+            text-align: center;
+        }
+    }
+}

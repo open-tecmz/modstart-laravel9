@@ -1,0 +1,307 @@
+.ub-scroll-bar-mini {
+    &::-webkit-scrollbar-track {
+        background-color: var(--color-scrollbar-bg);
+        border: none;
+    }
+
+    &::-webkit-scrollbar {
+        width: 0.3125rem;
+        height: 0.3125rem;
+        background-color: var(--scolor-scrollbar-thumb);
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border-radius: 0.625rem;
+        background-color: var(--scolor-scrollbar-thumb);
+    }
+
+    &.auto {
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
+
+        &:hover {
+            scrollbar-width: thin;
+        }
+    }
+}
+
+.ub-loading {
+    text-align: center;
+    color: var(--color-muted);
+    padding: 1.25rem 0;
+}
+
+.ub-empty {
+    text-align: center;
+    color: var(--color-muted);
+    padding: 6.25rem 0;
+
+    &.small {
+        padding: 1.25rem 0;
+    }
+
+    .icon {
+        font-size: 3.75rem;
+        text-align: center;
+        color: var(--color-muted);
+        line-height: 3.75rem;
+
+        * {
+            font-size: 3.75rem;
+            line-height: 3.75rem;
+        }
+
+        .image {
+            width: 6.25rem;
+            height: 6.25rem;
+            object-fit: contain;
+        }
+    }
+
+    .text {
+        line-height: 1.875rem;
+        color: var(--color-muted);
+        padding-top: 0.625rem;
+    }
+}
+
+.ub-load-more {
+    text-align: center;
+    color: var(--color-muted);
+    padding: 0.625rem 0;
+    cursor: pointer;
+    font-size: var(--font-size);
+    transition: var(--transition);
+
+    &:hover {
+        color: var(--color-primary);
+    }
+}
+
+.ub-no-more {
+    text-align: center;
+    color: var(--color-muted);
+    padding: 0.625rem 0;
+    font-size: var(--font-size);
+}
+
+.ub-text-slash-separate {
+    .item {
+        display: inline-block;
+
+        &:after {
+            content: '/';
+            color: var(--color-tertiary-light);
+            display: inline-block;
+            margin: 0 0.125rem;
+        }
+
+        &:last-child {
+            &:after {
+                display: none;
+            }
+        }
+    }
+}
+
+.ub-placeholder {
+    background: var(--color-body-block-bg);
+    border-radius: var(--size-radius-sm);
+    width: 100%;
+    min-height: 1em;
+    text-align: center;
+    color: var(--color-muted);
+}
+
+.ub-pair {
+    padding: 0.5em 0 0.5em 5em;
+    line-height: 1.5em;
+
+    .name {
+        float: left;
+        margin-left: -5em;
+        color: var(--color-muted);
+    }
+
+    .value {
+
+    }
+}
+
+.ub-icon-text {
+    display: inline-block;
+    white-space: nowrap;
+    padding: 0 1.25rem 0 0;
+
+    .icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 0.3125rem 0 0;
+        white-space: nowrap;
+    }
+
+    .text {
+        line-height: 1.875rem;
+        text-align: center;
+        display: inline-block;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--color-text);
+    }
+}
+
+.ub-tools {
+    text-align: center;
+
+    .item {
+        display: inline-block;
+        width: 3.75rem;
+        color: var(--color-muted);
+        border-radius: var(--size-radius);
+        text-align: center;
+        padding: 0.25rem 0;
+        transition: var(--transition);
+
+        &:hover {
+            background: var(--color-body-block-bg-hover);
+            color: var(--color-body-block-hover);
+        }
+
+        &.active {
+            color: var(--color-primary);
+        }
+
+        .icon {
+            display: block;
+            font-size: 1.875rem;
+            line-height: 1.875rem;
+        }
+
+        .text {
+            display: block;
+        }
+    }
+}
+
+.ub-line {
+    height: 1px;
+    background: var(--color-body-line);
+    margin-top: var(--size-margin);
+    margin-bottom: var(--size-margin);
+}
+
+.ub-file-selector {
+    .ub-file-selector__value, .ub-file-selector__action, .ub-file-selector__close {
+        display: inline-block;
+        cursor: default;
+        position: relative;
+        border-radius: 0.25rem;
+        line-height: 1.75rem;
+        height: 1.75rem;
+        vertical-align: bottom;
+
+        &.hidden {
+            overflow: hidden;
+            width: 0px;
+            height: 0px;
+            position: absolute;
+            border: 0;
+        }
+    }
+
+    .ub-file-selector__item {
+        margin-bottom: 0.25rem;
+
+        &.hidden {
+            display: none !important;
+        }
+
+        &.image {
+            position: relative;
+            width: 3.75rem;
+            height: 3.75rem;
+            box-shadow: var(--box-shadow-xs);
+            border: 0.0625rem solid var(--color-body-line);
+            border-radius: var(--size-radius-sm);
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            transition: var(--transition);
+
+            &.has-value:hover {
+                border-color: var(--color-primary-light);
+                box-shadow: var(--box-shadow-hover);
+
+                .tools {
+                    display: block;
+                }
+            }
+
+            .cover {
+                width: 100%;
+            }
+
+            .tools {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                background: var(--color-mask);
+                color: var(--color-text-reverse);
+                border-radius: var(--size-radius-sm);
+                text-align: center;
+                padding: 1.25rem 0 0 0;
+                display: none;
+
+                .action {
+                    color: var(--color-text-reverse);
+                    line-height: 1.25rem;
+                    width: 1.25rem;
+                    height: 1.25rem;
+                    vertical-align: top;
+                }
+
+                .close {
+                    position: absolute;
+                    top: 0.125rem;
+                    right: 0.125rem;
+                    width: 0.75rem;
+                    height: 0.75rem;
+                    line-height: 0.75rem;
+                    text-align: center;
+                    display: block;
+                }
+            }
+        }
+    }
+
+    .ub-file-selector__value {
+        border: 0.0625rem solid var(--color-body-line);
+        border-radius: var(--size-radius-sm);
+        padding: 0 0.625rem;
+        background: var(--color-content-bg);
+        white-space: nowrap;
+        // max-width: calc( 100% - 2.5rem);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ub-file-selector__close {
+        cursor: pointer;
+    }
+}
+
+@media print {
+    .ub-print-hidden {
+        display: none;
+    }
+}
