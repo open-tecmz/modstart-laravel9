@@ -407,3 +407,272 @@ function is_dir_really_writable($dir)
     @unlink($testFile);
     return true;
 }
+
+/* ---------------------------------------------------------------------------
+ * 环境检查增强：扩展能力探测 + 诊断信息 + PHP 8.5 专项
+ *
+ * 扩展检测不再只依赖“某个函数 / 类是否存在”这一条判断，原因是：
+ * 1) 扩展可能已编译进 PHP（宝塔等面板的「安装扩展」里不会列出 curl / openssl /
+ *    mbstring / zip / pdo_mysql 这类内置项，但它们确实在工作）；
+ * 2) 函数可能被 php.ini 的 disable_functions 禁用，此时 function_exists() 同样返回
+ *    false，而面板里明明写着“已安装”。
+ * 两者都会造成“面板里有扩展、安装页却提示缺少”的误判，统一走 env_extension_state()，
+ * 并在有异常时输出站点实际使用的 php.ini / 扩展目录等信息，便于客服定位。
+ * ------------------------------------------------------------------------- */
+
+/**
+ * 当前 PHP 版本是否不低于指定版本
+ * @param string $version 如 8.5
+ * @return bool
+ */
+function php_version_at_least($version)
+{
+    return version_compare(PHP_VERSION, $version, '>=');
+}
+
+/**
+ * 函数是否被 disable_functions 禁用
+ * function_exists() 对被禁用函数返回 false，这里通过 php.ini 的 disable_functions 反向确认
+ * （get_defined_functions() 各版本都会排除被禁用函数，靠它判断并不可靠）。
+ * @param string $function
+ * @return bool
+ */
+function env_function_disabled($function)
+{
+    if (function_exists($function)) {
+        return false;
+    }
+    $disabled = ini_get('disable_functions');
+    if (empty($disabled)) {
+        return false;
+    }
+    $disabled = array_map('trim', explode(',', strtolower($disabled)));
+    return in_array(strtolower($function), $disabled, true);
+}
+
+/**
+ * 探测扩展状态
+ * @param string $extension extension_loaded() 使用的扩展名
+ * @param array $probes 代表性函数名 / 类名，任意一个可用即认为扩展可用
+ * @return array state：ok | disabled（已加载但函数被禁用） | missing；probe：探测点
+ */
+function env_extension_state($extension, $probes = array())
+{
+    $entry = isset($probes[0]) ? $probes[0] : $extension;
+    foreach ($probes as $probe) {
+        if (function_exists($probe) || class_exists($probe)) {
+            return array('state' => 'ok', 'probe' => $probe);
+        }
+    }
+    if (extension_loaded($extension)) {
+        return array('state' => 'disabled', 'probe' => $entry);
+    }
+    foreach ($probes as $probe) {
+        if (env_function_disabled($probe)) {
+            return array('state' => 'disabled', 'probe' => $probe);
+        }
+    }
+    return array('state' => 'missing', 'probe' => $entry);
+}
+
+/**
+ * 扩展异常项收集器（供页面底部「环境诊断」使用）
+ * @return array
+ */
+function &env_diag_store()
+{
+    static $list = array();
+    return $list;
+}
+
+/**
+ * 记录一条扩展异常项
+ * @param string $extension
+ * @param string $label
+ * @param string $state disabled | missing
+ * @param string $probe
+ * @return void
+ */
+function env_diag_push($extension, $label, $state, $probe = '')
+{
+    $store = &env_diag_store();
+    $store[] = array(
+        'extension' => $extension,
+        'label' => $label,
+        'state' => $state,
+        'probe' => $probe,
+    );
+}
+
+/**
+ * 渲染单个扩展检查项
+ * @param string $label 展示名称，如 PHP curl 扩展
+ * @param string $extension 扩展名，如 curl
+ * @param array $probes 代表性函数名 / 类名
+ * @param bool $optional 选填扩展（缺失只提示，不阻塞安装）
+ * @return void
+ */
+function env_check_extension($label, $extension, $probes = array(), $optional = false)
+{
+    $ret = env_extension_state($extension, $probes);
+    if ('ok' === $ret['state']) {
+        text_success($label);
+        return;
+    }
+    env_diag_push($extension, $label, $ret['state'], $ret['probe']);
+    if ('disabled' === $ret['state']) {
+        $msg = $label . ' 已加载，但 ' . $ret['probe'] . ' 不可用（多被 disable_functions 禁用）';
+        $optional ? text_warning($msg) : text_error($msg);
+        return;
+    }
+    $optional ? text_warning('缺少 ' . $label) : text_error('缺少 ' . $label);
+}
+
+/**
+ * PDO mysql 驱动检测
+ * @return void
+ */
+function env_check_pdo_mysql()
+{
+    $drivers = array();
+    if (class_exists('PDO')) {
+        $drivers = PDO::getAvailableDrivers();
+    }
+    if (in_array('mysql', $drivers)) {
+        text_success('PHP PDO mysql 驱动');
+        return;
+    }
+    env_diag_push('pdo_mysql', 'PHP PDO mysql 驱动', extension_loaded('pdo_mysql') ? 'disabled' : 'missing', 'pdo_mysql');
+    text_error('缺少 PHP PDO mysql 驱动');
+}
+
+/**
+ * PHP 8.5 专项检查
+ * PHP 8.5 与之前的版本在环境影响上有几处明确差异，需要在安装页单独给出结论：
+ * - opcache 自 PHP 8.5 起已内置（不再作为扩展安装，也无法在面板里单独安装）；
+ * - disable_classes 配置项自 PHP 8.5 起被移除，配置后不生效；
+ * - curl_close / finfo_close / imagedestroy 自 PHP 8.5 起弃用，依赖内置兼容层。
+ * @return void
+ */
+function env_check_php85()
+{
+    if (function_exists('opcache_get_status')) {
+        text_success('PHP opcache 已启用');
+    } else {
+        text_warning('PHP 8.5 已内置 opcache，当前未启用（建议 php.ini 开启 opcache.enable=1）');
+    }
+    $disableClasses = ini_get('disable_classes');
+    $disableClasses = false === $disableClasses ? '' : trim($disableClasses);
+    if ('' === $disableClasses) {
+        text_success('PHP disable_classes 未配置');
+    } else {
+        text_warning('PHP 8.5 已移除 disable_classes 配置，当前配置不生效：' . $disableClasses);
+    }
+    if (file_exists(APP_PATH . '/vendor/modstart/modstart/src/Core/Compat/Runtime.php')) {
+        text_success('PHP 8.5 兼容层');
+    } else {
+        text_warning('缺少 PHP 8.5 兼容层文件（vendor/modstart/modstart/src/Core/Compat/Runtime.php），请确认程序文件完整');
+    }
+}
+
+/**
+ * 是否为宝塔面板环境（用于给出面板内的操作路径）
+ * @return bool
+ */
+function env_is_baota()
+{
+    return file_exists('/www/server/panel') || file_exists('C:/BtSoft') || file_exists('D:/BtSoft');
+}
+
+/**
+ * 是否为 Windows 环境
+ * @return bool
+ */
+function env_is_windows()
+{
+    return 0 === strpos(strtoupper(PHP_OS), 'WIN');
+}
+
+/**
+ * 生成单个异常扩展的修复指引（HTML）
+ * @param array $item
+ * @return string
+ */
+function env_extension_guide($item)
+{
+    $name = htmlspecialchars($item['extension'], ENT_QUOTES, 'UTF-8');
+    $probe = htmlspecialchars($item['probe'], ENT_QUOTES, 'UTF-8');
+    if ('disabled' === $item['state']) {
+        return '扩展已加载，但 <code class="ins-code">' . $probe . '</code> 不可用：多为 php.ini 的 '
+            . '<code class="ins-code">disable_functions</code> 把相关函数禁用（'
+            . (env_is_baota() ? '宝塔「PHP 设置 → 禁用函数」中删除该函数，或' : '')
+            . '从 php.ini 的 disable_functions 中移除），保存后重启 PHP。';
+    }
+    $tips = array();
+    if (in_array($item['extension'], array('pdo', 'tokenizer', 'json', 'ctype', 'filter', 'hash', 'session', 'spl', 'random', 'zlib'), true)) {
+        return '「' . $name . '」属于 PHP 内置扩展（编译时启用），面板「安装扩展」里不会单独提供：'
+            . '请确认 PHP 编译参数包含它，或直接更换一个包含该扩展的 PHP 版本。';
+    }
+    if ('zip' === $item['extension'] && php_version_at_least('8.4') && env_is_baota()) {
+        $tips[] = '宝塔 PHP 8.4 / 8.5 的「极速安装」包编译参数可能未包含 <code class="ins-code">--enable-zip</code>，'
+            . '面板「安装扩展」里也找不到 zip：卸载该 PHP 后改用「编译安装」，在「添加自定义模块」中填写 '
+            . '<code class="ins-code">--enable-zip --with-zlib --with-openssl</code> 重新编译，或先切换到 PHP 8.1 / 8.2 等成熟版本。';
+    }
+    if (env_is_windows()) {
+        $tips[] = 'Windows 在 php.ini 中启用 <code class="ins-code">extension=php_' . $name . '.dll</code>'
+            . '（PHP 7.2+ 也可写 <code class="ins-code">extension=' . $name . '</code>），'
+            . '并确认 <code class="ins-code">extension_dir</code> 指向 PHP 的 ext 目录。';
+    } else {
+        $tips[] = '在 php.ini 中启用 <code class="ins-code">extension=' . $name . '.so</code>。';
+    }
+    if (env_is_baota()) {
+        $tips[] = '宝塔：软件商店 → 已安装 → 当前 PHP 版本 → 设置，在「安装扩展」中安装、在「配置文件」中确认 extension 已启用。';
+    }
+    return join(' ', $tips);
+}
+
+/**
+ * 渲染「环境诊断」面板，没有任何异常时返回空字符串
+ * @return string
+ */
+function env_diag_render()
+{
+    $list = env_diag_store();
+    if (empty($list)) {
+        return '';
+    }
+    $h = function ($v) {
+        return htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    };
+    $loaded = get_loaded_extensions();
+    sort($loaded);
+    $iniFile = php_ini_loaded_file();
+    $scanned = php_ini_scanned_files();
+    $rows = array(
+        'PHP 版本' => PHP_VERSION . '（' . php_sapi_name() . '，' . (defined('PHP_ZTS') && PHP_ZTS ? 'TS' : 'NTS') . '，' . (PHP_INT_SIZE * 8) . ' 位）',
+        '操作系统' => $h(PHP_OS) . ' ' . $h(php_uname('r')),
+        'php.ini' => $iniFile ? $h($iniFile) : '未加载 php.ini（请检查 PHP 是否使用了配置文件）',
+        '附加 ini' => $scanned ? $h(str_replace(array("\r", "\n", "\t"), ' ', $scanned)) : '无',
+        'extension_dir' => $h((string)ini_get('extension_dir')),
+        '已加载扩展' => $h(join(', ', $loaded)),
+    );
+    $html = '<div class="ins-diag">';
+    $html .= '<div class="ins-diag-head"><i class="iconfont icon-info" aria-hidden="true"></i> 环境诊断与修复指引</div>';
+    $html .= '<ul class="ins-diag-list">';
+    foreach ($list as $item) {
+        $html .= '<li><strong>' . $h($item['label']) . '</strong>：' . env_extension_guide($item) . '</li>';
+    }
+    $html .= '</ul>';
+    $html .= '<div class="ins-diag-note">修改 php.ini 后必须重启 PHP（PHP-FPM / Apache）才会生效，可用 '
+        . '<code class="ins-code">php -m</code> 或 phpinfo 确认扩展已经在列表中；Debian / Ubuntu 也可安装 '
+        . '<code class="ins-code">php' . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . '-扩展名</code> 包。'
+        . '若面板里已安装扩展、安装页仍提示缺少，请展开下方信息核对站点实际使用的 PHP 版本与 php.ini，'
+        . '多版本共存时站点可能运行在另一个 PHP 上。</div>';
+    $html .= '<details class="ins-diag-more"><summary>查看站点实际使用的 PHP 信息（排查 php.ini / 版本不一致时使用）</summary><dl>';
+    foreach ($rows as $label => $value) {
+        $html .= '<dt>' . $h($label) . '</dt><dd>' . $value . '</dd>';
+    }
+    $html .= '</dl></details>';
+    $html .= '</div>';
+    return $html;
+}

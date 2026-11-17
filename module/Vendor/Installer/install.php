@@ -58,19 +58,22 @@ ob_start();
     <?php php_version_ok() ? text_success('PHP版本 ' . PHP_VERSION) : text_error('PHP版本要求（' . php_version_requires() . '） 当前为 ' . PHP_VERSION); ?>
     <?php PHP_INT_SIZE == 4 ? text_error('PHP编译版本32位，需要64位') : text_success('PHP编译版本满足要求（64位）'); ?>
     <?php text_success('最大上传：' . FileUtil::formatByte(EnvUtil::env('uploadMaxSize'))); ?>
-    <?php function_exists('curl_init') ? text_success('PHP curl 扩展') : text_error('缺少 PHP curl 扩展'); ?>
-    <?php class_exists('ZipArchive') ? text_success('PHP zip 扩展') : text_error('缺少 PHP zip 扩展'); ?>
-    <?php function_exists('openssl_open') ? text_success('PHP openssl 扩展') : text_error('缺少 PHP openssl 扩展'); ?>
-    <?php function_exists('exif_read_data') ? text_success('PHP exif 扩展') : text_error('缺少 PHP exif 扩展'); ?>
-    <?php function_exists('bcmul') ? text_success('PHP bcmath 扩展') : text_error('缺少 PHP bcmath 扩展'); ?>
-    <?php class_exists('pdo') ? text_success('PHP pdo 扩展') : text_error('缺少 PHP pdo 扩展'); ?>
-    <?php (class_exists('pdo') && in_array('mysql', PDO::getAvailableDrivers())) ? text_success('PHP PDO mysql 驱动') : text_error('缺少 PHP PDO mysql 驱动'); ?>
-    <?php function_exists('mb_internal_encoding') ? text_success('PHP mbstring 扩展') : text_error('缺少 PHP mbstring 扩展'); ?>
-    <?php function_exists('token_get_all') ? text_success('PHP tokenizer 扩展') : text_error('缺少 PHP tokenizer 扩展'); ?>
-    <?php function_exists('finfo_file') ? text_success('PHP fileinfo 扩展') : text_error('缺少 PHP fileinfo 扩展'); ?>
-    <?php function_exists('proc_open') ? text_success('proc_open 函数') : text_error('缺少 proc_open 函数', 'https://modstart.com/doc/install/qa.html'); ?>
-    <?php function_exists('putenv') ? text_success('putenv 函数') : text_error('缺少 putenv 函数', 'https://modstart.com/doc/install/qa.html'); ?>
-    <?php function_exists('proc_get_status') ? text_success('proc_get_status 函数') : text_error('缺少 proc_get_status 函数', 'https://modstart.com/doc/install/qa.html'); ?>
+    <?php env_check_extension('PHP curl 扩展', 'curl', array('curl_init', 'curl_exec')); ?>
+    <?php env_check_extension('PHP zip 扩展', 'zip', array('ZipArchive')); ?>
+    <?php env_check_extension('PHP openssl 扩展', 'openssl', array('openssl_open', 'openssl_encrypt')); ?>
+    <?php env_check_extension('PHP exif 扩展', 'exif', array('exif_read_data'), true); ?>
+    <?php env_check_extension('PHP bcmath 扩展', 'bcmath', array('bcmul')); ?>
+    <?php env_check_extension('PHP pdo 扩展', 'pdo', array('PDO')); ?>
+    <?php env_check_pdo_mysql(); ?>
+    <?php env_check_extension('PHP mbstring 扩展', 'mbstring', array('mb_internal_encoding', 'mb_strlen')); ?>
+    <?php env_check_extension('PHP tokenizer 扩展', 'tokenizer', array('token_get_all')); ?>
+    <?php env_check_extension('PHP fileinfo 扩展', 'fileinfo', array('finfo_open', 'finfo_file')); ?>
+    <?php if (php_version_at_least('8.5')) { ?>
+        <?php env_check_php85(); ?>
+    <?php } ?>
+    <?php function_exists('proc_open') ? text_success('proc_open 函数') : text_error('缺少 proc_open 函数' . (env_function_disabled('proc_open') ? '（被 disable_functions 禁用）' : ''), 'https://modstart.com/doc/install/qa.html'); ?>
+    <?php function_exists('putenv') ? text_success('putenv 函数') : text_error('缺少 putenv 函数' . (env_function_disabled('putenv') ? '（被 disable_functions 禁用）' : ''), 'https://modstart.com/doc/install/qa.html'); ?>
+    <?php function_exists('proc_get_status') ? text_success('proc_get_status 函数') : text_error('缺少 proc_get_status 函数' . (env_function_disabled('proc_get_status') ? '（被 disable_functions 禁用）' : ''), 'https://modstart.com/doc/install/qa.html'); ?>
     <?php if (version_compare(PHP_VERSION, '5.6.0', 'ge') && version_compare(PHP_VERSION, '5.7.0', 'lt')) { ?>
         <?php EnvUtil::iniFileConfig('always_populate_raw_post_data') == '-1' ? text_success('验证 always_populate_raw_post_data=-1') : text_error('请配置 always_populate_raw_post_data=-1', 'https://modstart.com/doc/install/qa.html'); ?>
     <?php } ?>
@@ -79,6 +82,7 @@ ob_start();
     <?php is_dir_really_writable(APP_PATH . '/public/') ? text_success('/public/目录可写') : text_error('/public/目录不可写'); ?>
     <?php is_dir_really_writable(APP_PATH . '/bootstrap/cache/') ? text_success('/bootstrap/cache/目录可写') : text_error('/bootstrap/cache/目录不可写'); ?>
 </div>
+<?php echo env_diag_render(); ?>
 <?php
 $envCheckHtml = ob_get_clean();
 $envCheckCount = check_counter(0);
@@ -743,6 +747,9 @@ $initialProgress = round(($initialIndex + 1) / $stepCount * 100, 3);
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
             gap: 0.375rem;
+            /* 与上方 Rewrite 检测块之间留出间距：二者之间隔着定位脚本节点，
+               `+` 相邻选择器匹配不到，必须直接给容器间距 */
+            margin-top: 0.5rem;
         }
 
         .ins-check-wide {
@@ -854,6 +861,106 @@ $initialProgress = round(($initialIndex + 1) / $stepCount * 100, 3);
             font-family: var(--font-family-mono);
             font-size: 0.75rem;
             color: var(--color-heading);
+        }
+
+        /* ---------- environment diagnosis (only when a check fails) ---------- */
+        .ins-diag {
+            margin-top: 0.5rem;
+            padding: 0.75rem 0.875rem;
+            border: 1px solid var(--color-danger-light);
+            border-radius: var(--size-radius-sm);
+            background-color: var(--color-content-bg);
+            font-size: 0.8125rem;
+            line-height: 1.7;
+            color: var(--color-text);
+        }
+
+        .ins-diag-head {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            margin-bottom: 0.375rem;
+            font-weight: 600;
+            color: var(--color-danger-dark);
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .ins-diag-head .iconfont {
+            flex: none;
+            color: var(--color-danger);
+        }
+
+        .ins-diag-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 0.375rem;
+        }
+
+        .ins-diag-list li {
+            padding-left: 0.75rem;
+            border-left: 2px solid var(--color-danger-light);
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            color: var(--color-muted);
+        }
+
+        .ins-diag-list li strong {
+            color: var(--color-heading);
+            font-weight: 600;
+        }
+
+        .ins-diag-more {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px dashed var(--color-body-line);
+        }
+
+        .ins-diag-note {
+            margin-top: 0.5rem;
+            color: var(--color-tertiary);
+            font-size: 0.75rem;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .ins-diag-more summary {
+            cursor: pointer;
+            color: var(--color-primary);
+            font-size: 0.8125rem;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .ins-diag-more dl {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            gap: 0.25rem 0.75rem;
+            margin: 0.5rem 0 0;
+            font-size: 0.75rem;
+        }
+
+        .ins-diag-more dt {
+            color: var(--color-tertiary);
+            white-space: nowrap;
+        }
+
+        .ins-diag-more dd {
+            margin: 0;
+            font-family: var(--font-family-mono);
+            color: var(--color-text);
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        @media (max-width: 40rem) {
+            .ins-diag-more dl {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 0.125rem;
+            }
         }
 
         /* ---------- license document ---------- */

@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+- 优化：安装向导的扩展检查改为「扩展能力探测」（`extension_loaded()` + 代表性函数 / 类），并区分「扩展未加载」与「扩展已加载但函数被 `disable_functions` 禁用」，修复宝塔等面板里扩展已安装、安装页却提示「缺少 PHP xxx 扩展」的误判
+- 新增：安装向导 PHP 8.5 专项检查——`opcache` 已内置（面板里不再提供安装）、`disable_classes` 配置已移除、`curl_close` / `finfo_close` / `imagedestroy` 弃用依赖内置兼容层
+- 新增：扩展检测未通过时输出「环境诊断与修复指引」，给出站点实际使用的 `php.ini`、`extension_dir`、SAPI、已加载扩展清单及逐项修复指引；针对宝塔 PHP 8.4 / 8.5「极速安装」包缺 `--enable-zip` 的问题给出编译安装方案
+- 优化：`exif` 改为选填扩展（缺失只提示不阻塞安装，核心功能不依赖），`proc_open` / `putenv` / `proc_get_status` 被禁用时提示区分「缺少函数」与「被 `disable_functions` 禁用」
 - 修复：安装向导的 PHP 版本检测改为优先读取 `composer.json` 的 `laravel/framework` 约束判断框架大版本，修复 Laravel 11/13 产品（如 `AppConstant::APP = 'modstart-laravel13'`）被误判为「PHP 版本要求 5.6.x, 7.0.x」而无法继续安装的问题
 - 修复：内置 Markdown 转 HTML 会把图片 / 链接地址中的下划线当成斜体标记（如 `22844_bgyg_5120.jpeg` 被输出成 `22844<em>bgyg</em>5120.jpeg` 导致图片加载失败），现在图片整体、链接目标地址先占位保护，`_` / `__` 强调也按 CommonMark 规则不在词内生效；顺带支持 `![alt](url "标题")` 标题写法
 - 优化：按钮交互态统一——系统 `.btn`、Element `.el-button`、layui `.layui-btn` / layer 弹窗按钮共用同一套规范：静止无阴影、hover 主色边框 + 浅主色底 + 轻阴影 + 上浮 1px、active 回位去阴影、disabled 统一降透明度
