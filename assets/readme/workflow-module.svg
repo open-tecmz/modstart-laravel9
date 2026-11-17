@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="wfTitle wfDesc">
+  <title id="wfTitle">模块生命周期：目录 → 安装 → 启用 → 生效</title>
+  <desc id="wfDesc">浅色圆角卡片上的四步流程：模块目录里放 config.json 与业务代码；执行 modstart:module-install 跑迁移并发布静态资源；在后台模块管理打开开关；路由、菜单、数据表与页面随开关出现，其他模块不受影响。</desc>
+
+  <rect width="1200" height="400" rx="28" fill="#E7ECF4"/>
+
+  <!-- timeline rail -->
+  <line x1="64" y1="66" x2="64" y2="306" stroke="#DCE2EC" stroke-width="1.5"/>
+
+  <!-- step 1 -->
+  <g id="step-directory">
+    <circle cx="64" cy="66" r="4.5" fill="#656DE6"/>
+    <text x="88" y="72" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#98A2B3">01</text>
+    <text x="132" y="73" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="24" font-weight="700" fill="#101828">模块目录</text>
+    <text x="300" y="71" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">路由、菜单、迁移、模型、视图、测试全部收在模块目录里</text>
+    <text x="1144" y="71" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#667085">module/News/</text>
+    <line x1="56" y1="106" x2="1144" y2="106" stroke="#DCE2EC" stroke-width="1.5"/>
+  </g>
+
+  <!-- step 2 -->
+  <g id="step-install">
+    <circle cx="64" cy="146" r="4.5" fill="#656DE6"/>
+    <text x="88" y="152" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#98A2B3">02</text>
+    <text x="132" y="153" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="24" font-weight="700" fill="#101828">安装</text>
+    <text x="300" y="151" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">安装时执行迁移并发布模块静态资源</text>
+    <text x="1144" y="151" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#667085">artisan modstart:module-install</text>
+    <line x1="56" y1="186" x2="1144" y2="186" stroke="#DCE2EC" stroke-width="1.5"/>
+  </g>
+
+  <!-- step 3 -->
+  <g id="step-enable">
+    <circle cx="64" cy="226" r="4.5" fill="#656DE6"/>
+    <text x="88" y="232" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#98A2B3">03</text>
+    <text x="132" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="24" font-weight="700" fill="#101828">启用</text>
+    <text x="300" y="231" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">后台「模块管理」打开开关，新装模块默认关闭</text>
+    <text x="1144" y="231" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#667085">enable =&gt; false</text>
+    <line x1="56" y1="266" x2="1144" y2="266" stroke="#DCE2EC" stroke-width="1.5"/>
+  </g>
+
+  <!-- step 4 -->
+  <g id="step-take-effect">
+    <circle cx="64" cy="306" r="4.5" fill="#656DE6"/>
+    <text x="88" y="312" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#98A2B3">04</text>
+    <text x="132" y="313" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="24" font-weight="700" fill="#101828">生效</text>
+    <text x="300" y="311" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">路由、菜单、数据表与页面随开关出现，其他模块不受影响</text>
+    <text x="1144" y="311" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#667085">routes · menu · tables</text>
+    <line x1="56" y1="346" x2="1144" y2="346" stroke="#DCE2EC" stroke-width="1.5"/>
+  </g>
+
+  <text x="56" y="378" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="18" fill="#667085">同一份模块代码兼容 ModStart 的 Laravel 5.1 / 9 / 13 发行版，模块之间不引用内核实现。</text>
+</svg>

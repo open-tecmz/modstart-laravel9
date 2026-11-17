@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="132" viewBox="0 0 1200 132" role="img" aria-labelledby="t d">
+  <title id="t">写一个模块</title>
+  <desc id="d">浅色圆角卡片，标注从空目录到后台 CRUD，依次是 config.json 声明、迁移、模型、视图。</desc>
+  <rect width="1200" height="132" rx="24" fill="#E7ECF4"/>
+  <text x="56" y="42" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" font-weight="600" letter-spacing="2" fill="#656DE6">05 / MODULE DEVELOPMENT</text>
+  <text x="56" y="96" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="40" font-weight="700" fill="#101828">从空目录到后台 CRUD</text>
+  <text x="1144" y="96" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#667085">config.json → Migrate → Model → View</text>
+  <line x1="56" y1="120" x2="1144" y2="120" stroke="#DCE2EC" stroke-width="1.5"/>
+</svg>

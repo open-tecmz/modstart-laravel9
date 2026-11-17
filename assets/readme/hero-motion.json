@@ -1,0 +1,128 @@
+{
+  "width": 1200,
+  "fps": 30,
+  "duration": 5.0,
+  "colors": 160,
+  "dither": "none",
+  "transparent_color": "#ff00ff",
+  "alpha_threshold": 128,
+  "clip_to_base_alpha": true,
+  "max_size_mb": 2.0,
+  "reveals": [],
+  "layers": [
+    {
+      "id": "brick-welcome",
+      "enter": {
+        "start": 0.2,
+        "end": 0.95,
+        "from": [
+          0,
+          -18
+        ]
+      },
+      "exit": {
+        "start": 4.4,
+        "end": 4.8,
+        "to": [
+          0,
+          -18
+        ]
+      }
+    },
+    {
+      "id": "brick-store",
+      "enter": {
+        "start": 0.3,
+        "end": 1.05,
+        "from": [
+          0,
+          -18
+        ]
+      },
+      "exit": {
+        "start": 4.34,
+        "end": 4.74,
+        "to": [
+          0,
+          -18
+        ]
+      }
+    },
+    {
+      "id": "brick-admin",
+      "enter": {
+        "start": 0.52,
+        "end": 1.27,
+        "from": [
+          0,
+          -18
+        ]
+      },
+      "exit": {
+        "start": 4.22,
+        "end": 4.62,
+        "to": [
+          0,
+          -18
+        ]
+      }
+    },
+    {
+      "id": "brick-site",
+      "enter": {
+        "start": 0.62,
+        "end": 1.37,
+        "from": [
+          0,
+          -18
+        ]
+      },
+      "exit": {
+        "start": 4.16,
+        "end": 4.56,
+        "to": [
+          0,
+          -18
+        ]
+      }
+    },
+    {
+      "id": "brick-nav",
+      "enter": {
+        "start": 0.72,
+        "end": 1.47,
+        "from": [
+          0,
+          -18
+        ]
+      },
+      "exit": {
+        "start": 4.1,
+        "end": 4.5,
+        "to": [
+          0,
+          -18
+        ]
+      }
+    },
+    {
+      "id": "slot-your-module",
+      "enter": {
+        "start": 1.1,
+        "end": 1.85,
+        "from": [
+          0,
+          -12
+        ]
+      },
+      "exit": {
+        "start": 3.98,
+        "end": 4.38,
+        "to": [
+          0,
+          -12
+        ]
+      }
+    }
+  ]
+}

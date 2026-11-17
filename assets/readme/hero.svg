@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="heroTitle heroDesc">
+  <title id="heroTitle">ModStart Laravel 9 — 用模块搭建你的网站与业务系统</title>
+  <desc id="heroDesc">浅色圆角卡片：左侧为项目名与一句价值说明，右侧为通用功能包底座上的六个模块位，其中一个是虚线插槽，表示可以继续安装自己的模块。</desc>
+
+  <!-- rounded light card: reads as a page in light mode, a soft panel in dark mode -->
+  <rect width="1200" height="400" rx="28" fill="#E7ECF4"/>
+
+  <!-- title block -->
+  <g id="hero-copy">
+    <text x="56" y="73" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="18" font-weight="600" letter-spacing="1.6" fill="#656DE6">MODSTART &#183; LARAVEL 9</text>
+
+    <text x="56" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="48" font-weight="700" fill="#101828">ModStart</text>
+    <text x="290" y="150" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="48" font-weight="700" fill="#656DE6">Laravel 9</text>
+
+    <text x="56" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#667085">模块化建站框架 &#183; 一份模块代码三版本通用</text>
+
+    <text x="56" y="252" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="36" font-weight="700" fill="#101828">用模块搭建你的网站与业务系统</text>
+
+    <text x="56" y="292" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">六个内置模块，装、启、停互不影响。</text>
+
+    <text x="56" y="336" font-family="ui-monospace, SFMono-Regular, Menlo, 'Noto Sans Mono', monospace" font-size="17" fill="#667085">PHP ^8.0  &#183;  Laravel 9.x  &#183;  MySQL 5.7+  &#183;  6 modules</text>
+  </g>
+
+  <!-- module assembly -->
+  <g id="hero-assembly">
+    <!-- row A -->
+    <g id="brick-admin">
+      <rect x="680" y="88" width="146" height="52" rx="10" fill="#FFFFFF" stroke="#EAECF0" stroke-width="1.5"/>
+      <rect x="743" y="87" width="20" height="5" rx="2" fill="#E7ECF4"/>
+      <text x="753" y="121" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">管理员框架</text>
+    </g>
+    <g id="brick-site">
+      <rect x="839" y="88" width="146" height="52" rx="10" fill="#FFFFFF" stroke="#EAECF0" stroke-width="1.5"/>
+      <rect x="902" y="87" width="20" height="5" rx="2" fill="#E7ECF4"/>
+      <text x="912" y="121" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">基本设置</text>
+    </g>
+    <g id="brick-nav">
+      <rect x="998" y="88" width="146" height="52" rx="10" fill="#FFFFFF" stroke="#EAECF0" stroke-width="1.5"/>
+      <rect x="1061" y="87" width="20" height="5" rx="2" fill="#E7ECF4"/>
+      <text x="1071" y="121" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">通用导航</text>
+    </g>
+
+    <!-- row B -->
+    <g id="brick-welcome">
+      <rect x="680" y="152" width="146" height="52" rx="10" fill="#FFFFFF" stroke="#EAECF0" stroke-width="1.5"/>
+      <rect x="743" y="151" width="20" height="5" rx="2" fill="#E7ECF4"/>
+      <text x="753" y="185" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">欢迎首页</text>
+    </g>
+    <g id="brick-store">
+      <rect x="839" y="152" width="146" height="52" rx="10" fill="#FFFFFF" stroke="#EAECF0" stroke-width="1.5"/>
+      <rect x="902" y="151" width="20" height="5" rx="2" fill="#E7ECF4"/>
+      <text x="912" y="185" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#344054">模块市场</text>
+    </g>
+
+    <!-- empty slot: install your own module -->
+    <g id="slot-your-module">
+      <rect x="998" y="152" width="146" height="52" rx="10" fill="#FFFFFF" stroke="#656DE6" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <text x="1071" y="184" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#3943DF">+ 你的模块</text>
+    </g>
+
+    <!-- base plate -->
+    <g id="plate-core">
+      <rect x="680" y="220" width="464" height="58" rx="12" fill="#EAE8FC" stroke="#D8DAFA" stroke-width="1.5"/>
+      <text x="704" y="246" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="20" font-weight="600" fill="#3943DF">通用功能包 Vendor</text>
+      <text x="704" y="268" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#667085">字段 &#183; 表格 &#183; 表单 &#183; 上传 &#183; 测试基座</text>
+    </g>
+
+    <text x="680" y="310" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif" font-size="18" fill="#667085">内核只做通用能力，业务能力一键装成模块</text>
+  </g>
+</svg>
